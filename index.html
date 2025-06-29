@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mesh - Connect Without Boundaries</title>
     <!-- QR Code Dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
         * {
             margin: 0;
@@ -126,7 +126,7 @@
 
         .input-group {
             display: flex;
-            gap: 12px;
+            gap: 0.8em;
             align-items: center;
         }
 
@@ -178,6 +178,23 @@
         .connection-section {
             margin-bottom: 30px;
             padding: 0 5px;
+        }
+
+        .main-connection-section {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .main-connection-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: 600;
         }
 
         .connection-section h3 {
@@ -267,6 +284,21 @@
             margin: 8px 4px;
         }
 
+        .scan-button {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+            color: white !important;
+            min-width: 80px !important;
+            font-size: 0.9em !important;
+        }
+
+        .scan-button:hover {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%) !important;
+        }
+
+        .scan-button.active {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+        }
+
         .camera-container {
             position: relative;
             display: inline-block;
@@ -344,6 +376,8 @@
             border-radius: 12px;
             margin-bottom: 15px;
             overflow: hidden;
+            gap: 0.8em;
+            padding: 0.8em;
         }
 
         .tab-button {
@@ -351,6 +385,7 @@
             padding: 12px 8px;
             background: transparent;
             border: none;
+            border-radius: 10px;
             font-size: 0.9em;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -447,12 +482,14 @@
             color: #666;
             padding: 5px;
             border-radius: 50%;
-            width: 35px;
+            width: 35px !important;
             height: 35px;
+            min-width: 35px !important;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            margin: 0 !important;
         }
 
         .modal-close:hover {
@@ -513,64 +550,11 @@
             transform: translateY(-1px);
         }
 
-        /* Privacy Section Styles */
-        .privacy-section {
-            background: rgba(255, 255, 255, 0.9);
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 0;
-            transition: all 0.3s ease;
-        }
-
-        .privacy-header {
-            padding: 20px 25px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s ease;
-            border-radius: 0 0 20px 20px;
-        }
-
-        .privacy-header:hover {
-            background: rgba(102, 126, 234, 0.05);
-        }
-
-        .privacy-title {
-            color: #333;
-            font-size: 1.1em;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .privacy-toggle {
-            font-size: 1.2em;
-            transition: transform 0.3s ease;
-            color: #667eea;
-        }
-
-        .privacy-toggle.expanded {
-            transform: rotate(180deg);
-        }
-
-        .privacy-content {
-            padding: 0 25px;
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.4s ease;
-        }
-
-        .privacy-content.expanded {
-            padding: 0 25px 25px 25px;
-            max-height: 1000px;
-        }
 
         .privacy-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: 1fr;
+            gap: 15px;
             margin-top: 15px;
         }
 
@@ -620,9 +604,10 @@
 
         .comparison-table {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: 1.2fr 0.8fr 0.8fr;
+            gap: 8px;
             text-align: center;
+            font-size: 0.85em;
         }
 
         .comparison-header {
@@ -635,8 +620,8 @@
         }
 
         .comparison-item {
-            padding: 8px;
-            font-size: 0.85em;
+            padding: 6px;
+            font-size: 0.75em;
             border-radius: 6px;
         }
 
@@ -649,6 +634,55 @@
         .comparison-traditional {
             background: rgba(244, 67, 54, 0.2);
             color: #c62828;
+        }
+
+        /* Collapsible Section Styles */
+        .collapsible-section {
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .section-header h3 {
+            color: #333;
+            font-size: 0.95em;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .section-toggle {
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+            color: #667eea;
+        }
+
+        .section-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .section-content.expanded {
+            max-height: 2000px;
+            padding-top: 15px;
         }
 
         @media (max-width: 768px) {
@@ -679,21 +713,7 @@
         
         <div class="main-content">
             <div class="sidebar full-width">
-                <div class="identity-section">
-                    <h3>🔑 Your Identity</h3>
-                    <div>
-                        <label>Username:</label>
-                        <input type="text" id="username" placeholder="Enter your name" value="Anonymous">
-                    </div>
-                    <div class="key-display" id="publicKey">Generating keys...</div>
-                    <div style="display: flex; gap: 5px; margin-top: 12px;">
-                        <button onclick="generateNewKeys()" style="flex: 1;">🔄 New Keys</button>
-                        <button onclick="exportPrivateKey()" style="flex: 1;">📤 Export</button>
-                        <button onclick="importPrivateKey()" style="flex: 1;">📥 Import</button>
-                    </div>
-                </div>
-
-                <div class="connection-section">
+                <div class="main-connection-section">
                     <h3>🤝 Connect to Peers</h3>
                     
                     <div class="feature-tabs">
@@ -711,8 +731,10 @@
                         <div id="room-url" class="url-section" style="display: none;">
                             <div style="font-weight: 600; margin-bottom: 10px;">📋 Share this link:</div>
                             <div id="share-url" class="share-url"></div>
-                            <button onclick="copyShareUrl()">📋 Copy Link</button>
-                            <button onclick="shareUrl()" style="margin-left: 10px;">📤 Share</button>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="copyShareUrl()" style="flex: 1;">📋 Copy Link</button>
+                                <button onclick="shareUrl()" style="flex: 1;">📤 Share</button>
+                            </div>
                         </div>
                         <div id="pending-connections" style="display: none;">
                             <div style="color: #666; margin: 10px 0;">Waiting for peers to connect...</div>
@@ -721,48 +743,222 @@
 
                     <!-- Join Tab -->
                     <div id="join-tab" class="tab-content">
-                        <div class="camera-section">
-                            <button id="start-camera" onclick="startQRScanner()">📷 Start Camera</button>
-                            <button id="stop-camera" onclick="stopQRScanner()" style="display: none;">🛑 Stop Camera</button>
-                        </div>
                         <div id="camera-container" class="camera-container" style="display: none;">
                             <video id="qr-video" autoplay muted playsinline></video>
                             <div class="scan-overlay"></div>
                         </div>
                         <div id="scan-result" style="margin-top: 10px; color: #666; text-align: center;"></div>
-                        <div style="margin-top: 15px; text-align: center;">
-                            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Or enter room code:</div>
-                            <input type="text" id="room-code" placeholder="Enter room code..." style="text-align: center;">
-                            <button onclick="joinByCode()">🔗 Join Room</button>
+                        <div style="margin-top: 15px;">
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: center;">Enter room code or scan QR:</div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="room-code" placeholder="Enter room code..." style="flex: 1; text-align: center;" oninput="handleRoomCodeInput()">
+                                <button id="start-camera" onclick="startQRScanner()" class="scan-button">📷 Scan</button>
+                                <button id="stop-camera" onclick="stopQRScanner()" style="display: none;" class="scan-button active">🛑 Stop</button>
+                            </div>
+                            <div style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;">Scan button opens camera to read room QR codes</div>
                         </div>
                     </div>
 
                     <!-- Manual Tab -->
                     <div id="manual-tab" class="tab-content">
-                        <div style="margin-bottom: 20px;">
-                            <textarea id="remoteOffer" placeholder="Paste peer's offer here..." rows="3" style="margin-bottom: 10px;"></textarea>
-                            <button onclick="handleRemoteOffer()" style="width: 100%;">📩 Accept Offer</button>
+                        <!-- Step Selection -->
+                        <div id="manual-step-selection" class="manual-step">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <h4 style="color: #333; margin-bottom: 15px;">Choose your role:</h4>
+                                <div style="display: flex; gap: 10px;">
+                                    <button onclick="startManualFlow('host')" style="flex: 1; padding: 15px; font-size: 0.9em;">
+                                        🏠 Host Connection<br>
+                                        <small style="opacity: 0.8;">Create offer first</small>
+                                    </button>
+                                    <button onclick="startManualFlow('join')" style="flex: 1; padding: 15px; font-size: 0.9em;">
+                                        🔗 Join Connection<br>
+                                        <small style="opacity: 0.8;">Have an offer to accept</small>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div style="margin-bottom: 20px;">
-                            <button onclick="createOffer()" style="width: 100%; margin-bottom: 10px;">📤 Create Offer</button>
-                            <textarea id="localOffer" placeholder="Share this offer with peers..." rows="3" readonly></textarea>
+
+                        <!-- Host Flow: Create Offer -->
+                        <div id="manual-host-step1" class="manual-step" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <h4 style="color: #333; margin-bottom: 10px;">🏠 Step 1: Create Your Offer</h4>
+                                <p style="color: #666; font-size: 0.9em;">Generate an offer to share with others</p>
+                            </div>
+                            <button onclick="createManualOffer()" style="width: 100%; margin-bottom: 15px;">📤 Create Offer</button>
+                            <div id="manual-offer-result" style="display: none;">
+                                <textarea id="manualLocalOffer" style="display: none;"></textarea>
+                                <div style="display: flex; gap: 10px;">
+                                    <button onclick="showOfferModal()" style="flex: 1;">📋 Show Offer Again</button>
+                                    <button onclick="proceedToAnswerStep()" style="flex: 1;">➡️ Next: Wait for Answer</button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <textarea id="remoteAnswer" placeholder="Paste answer here..." rows="2" style="margin-bottom: 10px;"></textarea>
-                            <button onclick="handleRemoteAnswer()" style="width: 100%;">✅ Accept Answer</button>
+
+                        <!-- Host Flow: Accept Answer -->
+                        <div id="manual-host-step2" class="manual-step" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <h4 style="color: #333; margin-bottom: 10px;">🏠 Step 2: Receive Answer</h4>
+                                <p style="color: #666; font-size: 0.9em;">Paste the answer you received from the other person</p>
+                            </div>
+                            <textarea id="remoteAnswer" placeholder="Paste the answer here..." rows="3" style="margin-bottom: 10px;"></textarea>
+                            <button onclick="handleManualAnswer()" style="width: 100%; margin-bottom: 15px;">✅ Accept Answer</button>
+                            <button onclick="resetManualFlow()" style="width: 100%; background: #f5f5f5; color: #666;">↩️ Start Over</button>
+                        </div>
+
+                        <!-- Join Flow: Accept Offer -->
+                        <div id="manual-join-step1" class="manual-step" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <h4 style="color: #333; margin-bottom: 10px;">🔗 Step 1: Accept Offer</h4>
+                                <p style="color: #666; font-size: 0.9em;">Paste the offer you received from the host</p>
+                            </div>
+                            <textarea id="remoteOffer" placeholder="Paste the offer here..." rows="3" style="margin-bottom: 10px;"></textarea>
+                            <button onclick="handleManualOffer()" style="width: 100%; margin-bottom: 15px;">📩 Accept Offer</button>
+                            <button onclick="resetManualFlow()" style="width: 100%; background: #f5f5f5; color: #666;">↩️ Start Over</button>
+                        </div>
+
+                        <!-- Join Flow: Share Answer -->
+                        <div id="manual-join-step2" class="manual-step" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <h4 style="color: #333; margin-bottom: 10px;">🔗 Step 2: Share Your Answer</h4>
+                                <p style="color: #666; font-size: 0.9em;">Send this answer back to the host to complete the connection</p>
+                            </div>
+                            <textarea id="generatedAnswer" placeholder="Your answer will appear here..." rows="3" readonly style="margin-bottom: 10px;"></textarea>
+                            <button onclick="showModal('Send This Answer to Host', document.getElementById('generatedAnswer').value)" style="width: 100%; margin-bottom: 15px;">📋 Copy Answer</button>
+                            <button onclick="resetManualFlow()" style="width: 100%; background: #f5f5f5; color: #666;">↩️ Start Over</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="connection-section">
-                    <h3>👥 Connected Peers (<span id="peerCount">0</span>)</h3>
-                    <div class="peer-list" id="peerList"></div>
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('peers')">
+                        <h3>👥 Connected Peers (<span id="peerCount">0</span>)</h3>
+                        <span class="section-toggle" id="peers-toggle">▼</span>
+                    </div>
+                    <div class="section-content" id="peers-content">
+                        <div class="connection-section">
+                            <div class="peer-list" id="peerList"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="stats" id="stats">
-                    Messages sent: 0<br>
-                    Messages received: 0<br>
-                    Messages relayed: 0
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('identity')">
+                        <h3>🔑 Your Identity</h3>
+                        <span class="section-toggle" id="identity-toggle">▼</span>
+                    </div>
+                    <div class="section-content" id="identity-content">
+                        <div class="identity-section">
+                            <div>
+                                <label>Username:</label>
+                                <input type="text" id="username" placeholder="Enter your name" value="Anonymous">
+                            </div>
+                            <div class="key-display" id="publicKey">Generating keys...</div>
+                            <div style="display: flex; gap: 5px; margin-top: 12px;">
+                                <button onclick="generateNewKeys()" style="flex: 1;">🔄 New Keys</button>
+                                <button onclick="exportPrivateKey()" style="flex: 1;">📤 Export</button>
+                                <button onclick="importPrivateKey()" style="flex: 1;">📥 Import</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('stats')">
+                        <h3>📊 Statistics</h3>
+                        <span class="section-toggle" id="stats-toggle">▼</span>
+                    </div>
+                    <div class="section-content" id="stats-content">
+                        <div class="stats" id="stats">
+                            Messages sent: 0<br>
+                            Messages received: 0<br>
+                            Messages relayed: 0
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('privacy')">
+                        <h3>🔒 Why Mesh is Most Private & Secure</h3>
+                        <span class="section-toggle" id="privacy-toggle">▼</span>
+                    </div>
+                    <div class="section-content" id="privacy-content">
+                        <div class="privacy-grid">
+                            <div class="privacy-card">
+                                <h4>🚫 Zero Servers</h4>
+                                <p>Your messages never touch our servers or anyone else's. Direct peer-to-peer connections mean only you and your contacts see your data.</p>
+                            </div>
+                            
+                            <div class="privacy-card">
+                                <h4>🔐 End-to-End Encryption</h4>
+                                <p>Every message is cryptographically signed with ECDSA-P256. Even if intercepted, your communications remain mathematically unbreakable.</p>
+                            </div>
+                            
+                            <div class="privacy-card">
+                                <h4>🌐 Mesh Network</h4>
+                                <p>Messages relay through connected peers, creating a resilient network that can't be shut down by any central authority.</p>
+                            </div>
+                            
+                            <div class="privacy-card">
+                                <h4>👤 True Anonymity</h4>
+                                <p>No phone numbers, email addresses, or personal information required. Generate new identities instantly with zero trace.</p>
+                            </div>
+                            
+                            <div class="privacy-card">
+                                <h4>🏠 Runs Locally</h4>
+                                <p>Everything happens in your browser using WebRTC. No apps to install, no permissions to grant, no data to mine.</p>
+                            </div>
+                            
+                            <div class="privacy-card">
+                                <h4>🔄 Self-Healing</h4>
+                                <p>If one peer goes offline, messages automatically route through others. The network adapts and survives without central coordination.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="privacy-comparison">
+                            <h4>🥊 Mesh vs Traditional Chat Apps</h4>
+                            <div class="comparison-table">
+                                <div class="comparison-header">Feature</div>
+                                <div class="comparison-header">🕸️ Mesh</div>
+                                <div class="comparison-header">📱 Traditional Apps</div>
+                                
+                                <div class="comparison-item">Server Storage</div>
+                                <div class="comparison-item comparison-mesh">Never ✓</div>
+                                <div class="comparison-item comparison-traditional">Always ✗</div>
+                                
+                                <div class="comparison-item">Metadata Collection</div>
+                                <div class="comparison-item comparison-mesh">Impossible ✓</div>
+                                <div class="comparison-item comparison-traditional">Extensive ✗</div>
+                                
+                                <div class="comparison-item">Government Backdoors</div>
+                                <div class="comparison-item comparison-mesh">Cannot Exist ✓</div>
+                                <div class="comparison-item comparison-traditional">Often Present ✗</div>
+                                
+                                <div class="comparison-item">Single Point of Failure</div>
+                                <div class="comparison-item comparison-mesh">None ✓</div>
+                                <div class="comparison-item comparison-traditional">Central Servers ✗</div>
+                                
+                                <div class="comparison-item">Identity Requirements</div>
+                                <div class="comparison-item comparison-mesh">Zero ✓</div>
+                                <div class="comparison-item comparison-traditional">Phone/Email ✗</div>
+                                
+                                <div class="comparison-item">Censorship Resistance</div>
+                                <div class="comparison-item comparison-mesh">Maximum ✓</div>
+                                <div class="comparison-item comparison-traditional">Minimal ✗</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">
+                            <h4 style="color: #333; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                                🎯 The Bottom Line
+                            </h4>
+                            <p style="color: #666; margin: 0; font-size: 0.95em; line-height: 1.6;">
+                                <strong>Mesh doesn't just protect your privacy - it makes surveillance architecturally impossible.</strong> 
+                                Unlike Signal, WhatsApp, or Telegram that still route through servers (creating chokepoints for control), 
+                                Mesh creates a truly distributed network where your conversations exist only between you and your contacts. 
+                                No company can sell your data, no government can demand backdoors, and no hacker can breach a server that doesn't exist.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -914,16 +1110,14 @@
                 qrContainer.innerHTML = '';
                 qrContainer.style.display = 'block';
                 
-                const canvas = document.createElement('canvas');
-                await QRCode.toCanvas(canvas, JSON.stringify(connectionData), {
-                    width: 256,
-                    margin: 2,
-                    color: {
-                        dark: '#333333',
-                        light: '#FFFFFF'
-                    }
+                const qr = new QRious({
+                    element: document.createElement('canvas'),
+                    value: JSON.stringify(connectionData),
+                    size: 256,
+                    foreground: '#333333',
+                    background: '#FFFFFF'
                 });
-                qrContainer.appendChild(canvas);
+                qrContainer.appendChild(qr.canvas);
 
                 // Generate shareable URL
                 const encodedData = btoa(JSON.stringify(connectionData));
@@ -954,23 +1148,54 @@
                 stopBtn.style.display = 'inline-block';
                 result.textContent = 'Position QR code in the camera view...';
 
-                qrScanner = new QrScanner(video, (result) => {
-                    try {
-                        const data = JSON.parse(result.data);
-                        if (data.type === 'offer' && data.sdp) {
-                            handleQRConnection(data);
-                            stopQRScanner();
-                        }
-                    } catch (error) {
-                        console.error('Invalid QR code:', error);
-                    }
-                }, {
-                    returnDetailedScanResult: true,
-                    highlightScanRegion: true,
-                    highlightCodeOutline: true
+                // Get camera stream
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
                 });
-
-                await qrScanner.start();
+                video.srcObject = stream;
+                
+                qrScanner = stream; // Store stream reference for cleanup
+                
+                // Create canvas for frame capture
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Start scanning loop
+                const scanFrame = () => {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA && qrScanner) {
+                        canvas.height = video.videoHeight;
+                        canvas.width = video.videoWidth;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            try {
+                                const data = JSON.parse(code.data);
+                                if (data.type === 'offer' && data.sdp) {
+                                    handleQRConnection(data);
+                                    stopQRScanner();
+                                    return;
+                                }
+                            } catch (error) {
+                                console.error('Invalid QR code:', error);
+                            }
+                        }
+                        
+                        // Continue scanning
+                        if (qrScanner) {
+                            requestAnimationFrame(scanFrame);
+                        }
+                    } else if (qrScanner) {
+                        requestAnimationFrame(scanFrame);
+                    }
+                };
+                
+                video.addEventListener('loadedmetadata', () => {
+                    scanFrame();
+                });
+                
             } catch (error) {
                 console.error('Failed to start camera:', error);
                 document.getElementById('scan-result').textContent = 'Camera access failed. Please check permissions.';
@@ -980,9 +1205,13 @@
         // Stop QR scanner
         function stopQRScanner() {
             if (qrScanner) {
-                qrScanner.stop();
-                qrScanner.destroy();
+                // Stop all tracks in the stream
+                qrScanner.getTracks().forEach(track => track.stop());
                 qrScanner = null;
+                
+                // Clear video source
+                const video = document.getElementById('qr-video');
+                video.srcObject = null;
             }
             
             document.getElementById('camera-container').style.display = 'none';
@@ -1045,15 +1274,27 @@
             }
         }
 
+        // Handle room code input
+        function handleRoomCodeInput() {
+            const codeInput = document.getElementById('room-code');
+            const code = codeInput.value.trim().toUpperCase();
+            
+            // Auto-submit when code reaches expected length (e.g., "BLUE-WOLF-42" = 11 chars)
+            if (code.length >= 10 && code.includes('-')) {
+                joinByCode(code);
+            }
+        }
+
         // Join by room code
-        function joinByCode() {
-            const code = document.getElementById('room-code').value.trim().toUpperCase();
-            if (!code) return;
+        function joinByCode(code = null) {
+            const codeInput = document.getElementById('room-code');
+            const roomCode = code || codeInput.value.trim().toUpperCase();
+            if (!roomCode) return;
             
             // In a real implementation, you'd look up the room code
             // For now, show instructions
-            addMessage('System', `To join room "${code}", scan the host's QR code or use the manual connection method.`);
-            document.getElementById('room-code').value = '';
+            addMessage('System', `To join room "${roomCode}", scan the host's QR code or use the manual connection method.`);
+            codeInput.value = '';
         }
 
         // Handle connection URL
@@ -1153,12 +1394,20 @@
                     status: 'waiting'
                 });
 
-                document.getElementById('localOffer').value = JSON.stringify({
+                const offerData = JSON.stringify({
                     type: 'offer',
                     sdp: offer.sdp,
                     username: myUsername,
                     publicKey: await exportPublicKey()
                 });
+
+                document.getElementById('localOffer').value = offerData;
+
+                // Check if this is from manual flow and show modal
+                const manualStep = document.getElementById('manual-host-step1');
+                if (manualStep && manualStep.style.display === 'block') {
+                    showModal('Share This Offer', offerData);
+                }
 
                 updateStatus('Offer created - share with peer');
             } catch (error) {
@@ -1206,8 +1455,15 @@
                     publicKey: await exportPublicKey()
                 };
 
-                // Show answer in modal
-                showModal('Send this Answer to the Peer', JSON.stringify(answerData));
+                // Check if we're in manual flow
+                const generatedAnswerField = document.getElementById('generatedAnswer');
+                if (generatedAnswerField && document.getElementById('manual-join-step1').style.display !== 'none') {
+                    // In manual flow - populate the answer field
+                    generatedAnswerField.value = JSON.stringify(answerData);
+                } else {
+                    // Show answer in modal (fallback)
+                    showModal('Send this Answer to the Peer', JSON.stringify(answerData));
+                }
 
                 document.getElementById('remoteOffer').value = '';
                 updateStatus('Answer generated - send to peer');
@@ -1503,18 +1759,26 @@
         function updatePeerList() {
             const peerList = document.getElementById('peerList');
             const peerCount = document.getElementById('peerCount');
+            const peersSection = document.querySelector('[onclick="toggleSection(\'peers\')"]').parentElement;
             
             peerList.innerHTML = '';
             peerCount.textContent = peers.size;
             
-            for (let [peerId, peer] of peers) {
-                const peerDiv = document.createElement('div');
-                peerDiv.className = 'peer-item';
-                peerDiv.innerHTML = `
-                    <span>${peer.username}</span>
-                    <span class="peer-status ${peer.status}">${peer.status}</span>
-                `;
-                peerList.appendChild(peerDiv);
+            // Hide/show peers section based on peer count
+            if (peers.size === 0) {
+                peersSection.style.display = 'none';
+            } else {
+                peersSection.style.display = 'block';
+                
+                for (let [peerId, peer] of peers) {
+                    const peerDiv = document.createElement('div');
+                    peerDiv.className = 'peer-item';
+                    peerDiv.innerHTML = `
+                        <span>${peer.username}</span>
+                        <span class="peer-status ${peer.status}">${peer.status}</span>
+                    `;
+                    peerList.appendChild(peerDiv);
+                }
             }
         }
 
@@ -1759,6 +2023,120 @@
                 console.error('Failed to import private key:', error);
                 addMessage('System', 'Failed to import private key. Please check the format.');
             }
+        }
+
+        // Note: togglePrivacySection removed - now uses toggleSection('privacy')
+
+        // Toggle collapsible sections
+        function toggleSection(sectionName) {
+            const content = document.getElementById(sectionName + '-content');
+            const toggle = document.getElementById(sectionName + '-toggle');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        // Manual connection flow functions
+        function startManualFlow(role) {
+            // Hide selection step
+            document.getElementById('manual-step-selection').style.display = 'none';
+            
+            if (role === 'host') {
+                document.getElementById('manual-host-step1').style.display = 'block';
+            } else {
+                document.getElementById('manual-join-step1').style.display = 'block';
+            }
+        }
+
+        function resetManualFlow() {
+            // Hide all steps
+            document.querySelectorAll('.manual-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            // Show selection
+            document.getElementById('manual-step-selection').style.display = 'block';
+            
+            // Clear any data
+            document.getElementById('manualLocalOffer').value = '';
+            document.getElementById('remoteOffer').value = '';
+            document.getElementById('remoteAnswer').value = '';
+            document.getElementById('generatedAnswer').value = '';
+            document.getElementById('manual-offer-result').style.display = 'none';
+        }
+
+        async function createManualOffer() {
+            try {
+                const peerConnection = new RTCPeerConnection(rtcConfig);
+                const dataChannel = peerConnection.createDataChannel('chat', {
+                    ordered: true
+                });
+
+                setupPeerConnection(peerConnection, dataChannel);
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                pendingOffer = peerConnection;
+                
+                // Create a temporary peer entry for tracking
+                const tempPeerId = generatePeerId();
+                peers.set(tempPeerId, {
+                    connection: peerConnection,
+                    channel: dataChannel,
+                    username: 'Pending...',
+                    publicKey: null,
+                    status: 'waiting'
+                });
+
+                const offerData = JSON.stringify({
+                    type: 'offer',
+                    sdp: offer.sdp,
+                    username: myUsername,
+                    publicKey: await exportPublicKey()
+                });
+
+                // Store in manual-specific element
+                document.getElementById('manualLocalOffer').value = offerData;
+                document.getElementById('manual-offer-result').style.display = 'block';
+                
+                // Show modal immediately
+                showModal('Share This Offer', offerData);
+
+                updateStatus('Offer created - share with peer');
+            } catch (error) {
+                console.error('Failed to create offer:', error);
+                updateStatus('Failed to create offer');
+            }
+        }
+
+        function showOfferModal() {
+            const offerText = document.getElementById('manualLocalOffer').value;
+            showModal('Share This Offer', offerText);
+        }
+
+        function proceedToAnswerStep() {
+            document.getElementById('manual-host-step1').style.display = 'none';
+            document.getElementById('manual-host-step2').style.display = 'block';
+        }
+
+        function handleManualOffer() {
+            handleRemoteOffer(); // Use existing function
+            // After processing, show the generated answer
+            setTimeout(() => {
+                // The existing function shows the answer in a modal, but we want it in our flow
+                document.getElementById('manual-join-step1').style.display = 'none';
+                document.getElementById('manual-join-step2').style.display = 'block';
+            }, 100);
+        }
+
+        function handleManualAnswer() {
+            handleRemoteAnswer(); // Use existing function
+            resetManualFlow(); // Return to start after successful connection
         }
 
         // Initialize the application
