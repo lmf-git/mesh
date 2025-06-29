@@ -235,6 +235,16 @@
             color: white;
         }
 
+        .peer-status.failed {
+            background: #ef4444;
+            color: white;
+        }
+
+        .peer-status.disconnected {
+            background: #6b7280;
+            color: white;
+        }
+
         .identity-section {
             background: rgba(255, 255, 255, 0.6);
             padding: 20px;
@@ -421,6 +431,35 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        button.loading {
+            opacity: 0.8;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        button.loading:hover {
+            transform: none;
+            box-shadow: none;
         }
 
         /* Modal Styles */
@@ -724,20 +763,18 @@
 
                     <!-- Host Tab -->
                     <div id="host-tab" class="tab-content active">
-                        <div style="text-align: center;">
+                        <div id="host-initial" style="text-align: center;">
                             <button onclick="createRoomOffer()" style="margin-bottom: 15px;">🏠 Create Room</button>
                         </div>
-                        <div id="room-qr" class="qr-code" style="display: none;"></div>
-                        <div id="room-url" class="url-section" style="display: none;">
-                            <div style="font-weight: 600; margin-bottom: 10px;">📋 Share this link:</div>
-                            <div id="share-url" class="share-url"></div>
-                            <div style="display: flex; gap: 0.8em;">
-                                <button onclick="copyShareUrl()" style="flex: 1;">📋 Copy Link</button>
-                                <button onclick="shareUrl()" style="flex: 1;">📤 Share</button>
+                        <div id="host-waiting" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="color: #333; font-weight: 600; margin-bottom: 15px;">🏠 Room Created!</div>
+                                <div style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Waiting for peers to connect...</div>
+                                <button onclick="showRoomModal()" style="margin-bottom: 10px;">📋 Show Offer Again</button>
                             </div>
-                        </div>
-                        <div id="pending-connections" style="display: none;">
-                            <div style="color: #666; margin: 10px 0;">Waiting for peers to connect...</div>
+                            <div id="peer-status">
+                                <div style="color: #888; font-size: 0.85em; text-align: center;">No peers connected yet</div>
+                            </div>
                         </div>
                     </div>
 
@@ -778,27 +815,18 @@
                             </div>
                         </div>
 
-                        <!-- Host Flow: Create Offer -->
-                        <div id="manual-host-step1" class="manual-step" style="display: none;">
-                            <div style="text-align: center; margin-bottom: 15px;">
-                                <h4 style="color: #333; margin-bottom: 10px;">🏠 Step 1: Create Your Offer</h4>
-                                <p style="color: #666; font-size: 0.9em;">Generate an offer to share with others</p>
-                            </div>
-                            <button onclick="createManualOffer()" style="width: 100%; margin-bottom: 15px;">📤 Create Offer</button>
-                            <div id="manual-offer-result" style="display: none;">
-                                <textarea id="manualLocalOffer" style="display: none;"></textarea>
-                                <div style="display: flex; gap: 0.8em;">
-                                    <button onclick="showOfferModal()" style="flex: 1;">📋 Show Offer Again</button>
-                                    <button onclick="proceedToAnswerStep()" style="flex: 1;">➡️ Next: Wait for Answer</button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Hidden elements for backward compatibility -->
+                        <textarea id="manualLocalOffer" style="display: none;"></textarea>
+                        <div id="manual-offer-result" style="display: none;"></div>
 
-                        <!-- Host Flow: Accept Answer -->
+                        <!-- Host Flow: Wait for Answer -->
                         <div id="manual-host-step2" class="manual-step" style="display: none;">
                             <div style="text-align: center; margin-bottom: 15px;">
-                                <h4 style="color: #333; margin-bottom: 10px;">🏠 Step 2: Receive Answer</h4>
-                                <p style="color: #666; font-size: 0.9em;">Paste the answer you received from the other person</p>
+                                <h4 style="color: #333; margin-bottom: 10px;">🏠 Offer Created!</h4>
+                                <p style="color: #666; font-size: 0.9em;">Share your offer and paste the answer you receive back</p>
+                            </div>
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <button onclick="showOfferModal()" style="margin-bottom: 10px;">📋 Show Offer Again</button>
                             </div>
                             <textarea id="remoteAnswer" placeholder="Paste the answer here..." rows="3" style="margin-bottom: 10px;"></textarea>
                             <button onclick="handleManualAnswer()" style="width: 100%; margin-bottom: 15px;">✅ Accept Answer</button>
@@ -1010,6 +1038,7 @@
         let qrScanner = null;
         let currentRoomCode = null;
         let isHost = false;
+        let connectionTimeouts = new Map();
 
         // WebRTC configuration
         const rtcConfig = {
@@ -1024,6 +1053,83 @@
         async function generateNewKeys() {
             await generateKeys();
             addMessage('System', 'New identity keys generated');
+        }
+
+        // Button loading state helpers
+        function setButtonLoading(button, loadingText) {
+            if (typeof button === 'string') {
+                button = document.querySelector(button);
+            }
+            if (!button) return;
+            
+            button.disabled = true;
+            button.classList.add('loading');
+            button.dataset.originalText = button.innerHTML;
+            button.innerHTML = `<span class="spinner"></span>${loadingText}`;
+        }
+
+        function clearButtonLoading(button) {
+            if (typeof button === 'string') {
+                button = document.querySelector(button);
+            }
+            if (!button) return;
+            
+            button.disabled = false;
+            button.classList.remove('loading');
+            if (button.dataset.originalText) {
+                button.innerHTML = button.dataset.originalText;
+                delete button.dataset.originalText;
+            }
+        }
+
+        // Set timeout for peer connection
+        function setConnectionTimeout(peerId, timeout = 30000) {
+            // Clear existing timeout if any
+            if (connectionTimeouts.has(peerId)) {
+                clearTimeout(connectionTimeouts.get(peerId));
+            }
+            
+            // Set new timeout
+            const timeoutId = setTimeout(() => {
+                const peer = peers.get(peerId);
+                if (peer && peer.status === 'connecting') {
+                    console.log(`Connection timeout for peer ${peerId}`);
+                    addMessage('System', `Connection to ${peer.username} timed out`);
+                    cleanupFailedPeer(peerId);
+                }
+                connectionTimeouts.delete(peerId);
+            }, timeout);
+            
+            connectionTimeouts.set(peerId, timeoutId);
+        }
+
+        // Clear connection timeout
+        function clearConnectionTimeout(peerId) {
+            if (connectionTimeouts.has(peerId)) {
+                clearTimeout(connectionTimeouts.get(peerId));
+                connectionTimeouts.delete(peerId);
+            }
+        }
+
+        // Clean up failed peer connections
+        function cleanupFailedPeer(peerId) {
+            const peer = peers.get(peerId);
+            if (peer) {
+                // Close connection
+                if (peer.connection) {
+                    peer.connection.close();
+                }
+                // Close data channel
+                if (peer.channel) {
+                    peer.channel.close();
+                }
+                // Clear timeout
+                clearConnectionTimeout(peerId);
+                // Remove from peers map
+                peers.delete(peerId);
+                updatePeerList();
+                console.log(`Cleaned up failed peer ${peerId}`);
+            }
         }
 
         // Initialize the application
@@ -1076,61 +1182,174 @@
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             // Add active class to selected tab
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // If called programmatically, find the button by tab name
+                const targetButton = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                }
+            }
             document.getElementById(tabName + '-tab').classList.add('active');
         }
 
         // Create room offer with QR code
         async function createRoomOffer() {
+            const createButton = event.target;
+            setButtonLoading(createButton, 'Creating Room...');
+            
             try {
                 const peerConnection = new RTCPeerConnection(rtcConfig);
                 const dataChannel = peerConnection.createDataChannel('chat', {
                     ordered: true
                 });
 
-                setupPeerConnection(peerConnection, dataChannel);
-
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
                 pendingOffer = peerConnection;
                 isHost = true;
                 currentRoomCode = generateRoomCode();
 
-                const connectionData = {
-                    type: 'offer',
-                    sdp: offer.sdp,
-                    username: myUsername,
-                    publicKey: await exportPublicKey(),
-                    roomCode: currentRoomCode
+                // Set up ICE candidate gathering - CRITICAL for reliable connections
+                peerConnection.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        // All ICE candidates gathered, offer is now complete
+                        const connectionData = {
+                            type: 'offer',
+                            sdp: peerConnection.localDescription.sdp,
+                            username: myUsername,
+                            publicKey: pendingPublicKey,
+                            roomCode: currentRoomCode
+                        };
+
+                        // Generate shareable URL
+                        const encodedData = btoa(JSON.stringify(connectionData));
+                        const shareUrl = `${window.location.origin}${window.location.pathname}#connect=${encodedData}`;
+                        
+                        // Store room data globally for modal use
+                        window.currentRoomData = {
+                            connectionData: connectionData,
+                            shareUrl: shareUrl,
+                            roomCode: currentRoomCode
+                        };
+
+                        // Switch to waiting view after modal
+                        document.getElementById('host-initial').style.display = 'none';
+                        document.getElementById('host-waiting').style.display = 'block';
+
+                        // Show room modal immediately
+                        showRoomModal();
+
+                        updateStatus(`Room "${currentRoomCode}" created - Waiting for connections`);
+                    }
                 };
 
-                // Generate QR code
-                const qrContainer = document.getElementById('room-qr');
-                qrContainer.innerHTML = '';
-                qrContainer.style.display = 'block';
-                
-                const qr = new QRious({
-                    element: document.createElement('canvas'),
-                    value: JSON.stringify(connectionData),
-                    size: 256,
-                    foreground: '#333333',
-                    background: '#FFFFFF'
-                });
-                qrContainer.appendChild(qr.canvas);
+                setupPeerConnection(peerConnection, dataChannel);
 
-                // Generate shareable URL
-                const encodedData = btoa(JSON.stringify(connectionData));
-                const shareUrl = `${window.location.origin}${window.location.pathname}#connect=${encodedData}`;
-                
-                document.getElementById('share-url').textContent = shareUrl;
-                document.getElementById('room-url').style.display = 'block';
-                document.getElementById('pending-connections').style.display = 'block';
+                // Store public key for use in ICE callback
+                window.pendingPublicKey = await exportPublicKey();
 
-                updateStatus(`Room "${currentRoomCode}" created - Share QR or link`);
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                updateStatus('Generating connection data...');
             } catch (error) {
                 console.error('Failed to create room:', error);
                 updateStatus('Failed to create room');
+                clearButtonLoading(createButton);
+            }
+        }
+
+        // Show room QR and URL in modal
+        function showRoomModal() {
+            if (!window.currentRoomData) {
+                alert('No active room. Please create a room first.');
+                return;
+            }
+
+            const { connectionData, shareUrl, roomCode } = window.currentRoomData;
+
+            // Create QR code
+            const qrCanvas = document.createElement('canvas');
+            const qr = new QRious({
+                element: qrCanvas,
+                value: JSON.stringify(connectionData),
+                size: 256,
+                foreground: '#333333',
+                background: '#FFFFFF'
+            });
+
+            // Create modal content with QR and URL
+            const modalContent = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h4 style="color: #333; margin-bottom: 15px;">Room: ${roomCode}</h4>
+                    <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block; margin-bottom: 15px;">
+                        ${qrCanvas.outerHTML}
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #333;">📋 Share this link:</div>
+                    <div style="font-family: monospace; font-size: 0.85em; background: #f5f5f5; padding: 10px; border-radius: 8px; word-break: break-all; border: 2px solid #e0e0e0;">
+                        ${shareUrl}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.8em; margin-top: 15px;">
+                    <button onclick="copyTextToClipboard('${shareUrl.replace(/'/g, "\\'")}'); alert('Link copied to clipboard!');" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">📋 Copy Link</button>
+                    <button onclick="shareRoomUrl()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">📤 Share</button>
+                </div>
+            `;
+
+            // Show modal with custom content
+            showCustomModal('🏠 Your Room is Ready!', modalContent);
+        }
+
+        // Show custom modal with HTML content
+        function showCustomModal(title, htmlContent) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-textarea').style.display = 'none';
+            
+            // Create or update custom content div
+            let customDiv = document.getElementById('modal-custom-content');
+            if (!customDiv) {
+                customDiv = document.createElement('div');
+                customDiv.id = 'modal-custom-content';
+                document.querySelector('.modal-body').appendChild(customDiv);
+            }
+            
+            customDiv.innerHTML = htmlContent;
+            customDiv.style.display = 'block';
+            
+            // Hide copy button since we have custom buttons
+            document.querySelector('.modal-button.primary').style.display = 'none';
+            
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        // Copy text to clipboard helper
+        function copyTextToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Share room URL
+        function shareRoomUrl() {
+            if (navigator.share && window.currentRoomData) {
+                navigator.share({
+                    title: 'Join my Mesh chat room',
+                    text: `Join my private chat room: ${window.currentRoomData.roomCode}`,
+                    url: window.currentRoomData.shareUrl
+                });
+            } else if (window.currentRoomData) {
+                copyTextToClipboard(window.currentRoomData.shareUrl);
+                alert('Link copied to clipboard!');
             }
         }
 
@@ -1227,6 +1446,27 @@
             try {
                 const peerConnection = new RTCPeerConnection(rtcConfig);
 
+                // Set up ICE candidate gathering for answer
+                peerConnection.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        // All ICE candidates gathered, answer is now complete
+                        const answerData = {
+                            type: 'answer',
+                            sdp: peerConnection.localDescription.sdp,
+                            username: myUsername,
+                            publicKey: window.tempPublicKey
+                        };
+                        
+                        // Display answer for user to share back to host
+                        document.getElementById('scan-result').innerHTML = `
+                            <div style="margin: 10px 0; color: #333;">
+                                <strong>Connection answer generated!</strong><br>
+                                <button onclick="showModal('Share Answer with Host', '${JSON.stringify(answerData).replace(/'/g, "\\'")}')">📋 View Answer to Share</button>
+                            </div>
+                        `;
+                    }
+                };
+
                 peerConnection.ondatachannel = (event) => {
                     setupPeerConnection(peerConnection, event.channel);
                 };
@@ -1248,26 +1488,17 @@
                     publicKey: offerData.publicKey,
                     status: 'connecting'
                 });
-
-                // Send answer back through URL parameters or display for manual sharing
-                const answerData = {
-                    type: 'answer',
-                    sdp: answer.sdp,
-                    username: myUsername,
-                    publicKey: await exportPublicKey()
-                };
                 
-                // Display answer for user to share back to host
-                document.getElementById('scan-result').innerHTML = `
-                    <div style="margin: 10px 0; color: #333;">
-                        <strong>Connection initiated!</strong><br>
-                        <button onclick="showModal('Share Answer with Host', '${JSON.stringify(answerData).replace(/'/g, "\\'")}')">📋 View Answer to Share</button>
-                    </div>
-                `;
+                // Set connection timeout
+                setConnectionTimeout(peerId);
+
+                // Store public key for ICE callback
+                window.tempPublicKey = await exportPublicKey();
+
+                document.getElementById('scan-result').textContent = 'Generating answer...';
 
                 updateStatus(`Connected to room "${offerData.roomCode || 'Unknown'}"`);
                 updatePeerList();
-                addMessage('System', `Joined room via QR code`);
             } catch (error) {
                 console.error('Failed to connect via QR:', error);
                 document.getElementById('scan-result').textContent = 'Connection failed';
@@ -1425,6 +1656,33 @@
                 const offerData = JSON.parse(offerText);
                 const peerConnection = new RTCPeerConnection(rtcConfig);
 
+                // Set up ICE candidate gathering for answer
+                peerConnection.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        // All ICE candidates gathered, answer is now complete
+                        const answerData = {
+                            type: 'answer',
+                            sdp: peerConnection.localDescription.sdp,
+                            username: myUsername,
+                            publicKey: window.remoteOfferPublicKey
+                        };
+
+                        // Show the generated answer based on current flow
+                        const manualJoinStep2 = document.getElementById('manual-join-step2');
+                        if (manualJoinStep2 && manualJoinStep2.style.display !== 'none') {
+                            // Manual flow - show in the step interface
+                            document.getElementById('generatedAnswer').value = JSON.stringify(answerData);
+                            document.getElementById('manual-join-step1').style.display = 'none';
+                            document.getElementById('manual-join-step2').style.display = 'block';
+                        } else {
+                            // Show answer in modal (fallback)
+                            showModal('Send this Answer to the Peer', JSON.stringify(answerData));
+                        }
+
+                        updateStatus('Answer generated - send to peer');
+                    }
+                };
+
                 peerConnection.ondatachannel = (event) => {
                     setupPeerConnection(peerConnection, event.channel);
                 };
@@ -1446,27 +1704,16 @@
                     publicKey: offerData.publicKey,
                     status: 'connecting'
                 });
+                
+                // Set connection timeout
+                setConnectionTimeout(peerId);
 
-                // Create answer to send back
-                const answerData = {
-                    type: 'answer',
-                    sdp: answer.sdp,
-                    username: myUsername,
-                    publicKey: await exportPublicKey()
-                };
+                // Store public key for ICE callback
+                window.remoteOfferPublicKey = await exportPublicKey();
 
-                // Check if we're in manual flow
-                const generatedAnswerField = document.getElementById('generatedAnswer');
-                if (generatedAnswerField && document.getElementById('manual-join-step1').style.display !== 'none') {
-                    // In manual flow - populate the answer field
-                    generatedAnswerField.value = JSON.stringify(answerData);
-                } else {
-                    // Show answer in modal (fallback)
-                    showModal('Send this Answer to the Peer', JSON.stringify(answerData));
-                }
+                updateStatus('Generating answer...');
 
                 document.getElementById('remoteOffer').value = '';
-                updateStatus('Answer generated - send to peer');
                 updatePeerList();
             } catch (error) {
                 console.error('Failed to handle offer:', error);
@@ -1493,6 +1740,7 @@
                         peer.username = answerData.username || 'Unknown';
                         peer.publicKey = answerData.publicKey;
                         peer.status = 'connecting';
+                        setConnectionTimeout(peerId);
                         peerFound = true;
                         break;
                     }
@@ -1508,6 +1756,7 @@
                         publicKey: answerData.publicKey,
                         status: 'connecting'
                     });
+                    setConnectionTimeout(peerId);
                 }
 
                 pendingOffer = null;
@@ -1546,7 +1795,9 @@
 
             dataChannel.onmessage = async (event) => {
                 try {
+                    console.log('Raw message received:', event.data);
                     const data = JSON.parse(event.data);
+                    console.log('Parsed message data:', data);
                     await handleIncomingMessage(data);
                 } catch (error) {
                     console.error('Failed to handle message:', error);
@@ -1562,6 +1813,7 @@
                 if (peer.channel === null && peer.connection.signalingState !== 'closed') {
                     peer.channel = dataChannel;
                     peer.status = 'connected';
+                    clearConnectionTimeout(peerId);
                     updateStatus(`Connected to ${peer.username}`);
                     addMessage('System', `Connected to ${peer.username}`);
                     break;
@@ -1673,13 +1925,18 @@
 
         // Handle incoming message
         async function handleIncomingMessage(messageData) {
+            console.log('Handling incoming message:', messageData);
+            
             // Check if we've seen this message before
             if (seenMessages.has(messageData.id)) {
+                console.log('Message already seen, ignoring');
                 return;
             }
 
             // Verify signature
+            console.log('Verifying message signature...');
             const isValid = await verifyMessage(messageData);
+            console.log('Message signature valid:', isValid);
             if (!isValid) {
                 console.warn('Invalid message signature');
                 return;
@@ -1687,10 +1944,14 @@
 
             seenMessages.add(messageData.id);
             
-            // Add to chat if it's not from us
-            if (messageData.username !== myUsername) {
+            // Add to chat if it's not from us (check by public key, not username)
+            const myPublicKey = await exportPublicKey();
+            if (messageData.publicKey !== myPublicKey) {
+                console.log('Adding message to chat from:', messageData.username);
                 addMessage(messageData.username, messageData.content, false);
                 messagesReceived++;
+            } else {
+                console.log('Message from self, not adding to chat');
             }
 
             // Relay to other peers (gossip protocol)
@@ -1721,17 +1982,24 @@
 
         // Broadcast message to all peers
         function broadcastMessage(messageData) {
+            console.log('Broadcasting message:', messageData);
             seenMessages.add(messageData.id);
             
+            let sentCount = 0;
             for (let [peerId, peer] of peers) {
                 if (peer.channel && peer.channel.readyState === 'open') {
                     try {
+                        console.log('Sending message to peer:', peerId, peer.username);
                         peer.channel.send(JSON.stringify(messageData));
+                        sentCount++;
                     } catch (error) {
                         console.error('Failed to send message to peer:', error);
                     }
+                } else {
+                    console.log('Peer channel not ready:', peerId, peer.channel?.readyState);
                 }
             }
+            console.log(`Message sent to ${sentCount} peers`);
         }
 
         // Add message to chat display
@@ -1795,7 +2063,29 @@
         function updatePeerConnectionStatus(peerConnection, status) {
             for (let [peerId, peer] of peers) {
                 if (peer.connection === peerConnection) {
-                    peer.status = status === 'connected' ? 'connected' : 'connecting';
+                    switch(status) {
+                        case 'connected':
+                            peer.status = 'connected';
+                            clearConnectionTimeout(peerId);
+                            break;
+                        case 'failed':
+                        case 'closed':
+                            peer.status = 'failed';
+                            clearConnectionTimeout(peerId);
+                            addMessage('System', `Connection to ${peer.username} failed`);
+                            // Cleanup failed connection after a short delay
+                            setTimeout(() => cleanupFailedPeer(peerId), 5000);
+                            break;
+                        case 'disconnected':
+                            peer.status = 'disconnected';
+                            addMessage('System', `Connection to ${peer.username} disconnected`);
+                            break;
+                        case 'checking':
+                        case 'new':
+                        default:
+                            peer.status = 'connecting';
+                            break;
+                    }
                     break;
                 }
             }
@@ -1848,12 +2138,23 @@
 
         function closeModal() {
             document.getElementById('modal').style.display = 'none';
+            
+            // Hide custom content and show textarea
+            const customDiv = document.getElementById('modal-custom-content');
+            if (customDiv) {
+                customDiv.style.display = 'none';
+            }
+            document.getElementById('modal-textarea').style.display = 'block';
+            
             // Restore original modal buttons in case they were changed
             const modalButtons = document.querySelector('.modal-buttons');
             modalButtons.innerHTML = `
                 <button class="modal-button secondary" onclick="closeModal()">Close</button>
                 <button class="modal-button primary" onclick="copyModalContent()">📋 Copy</button>
             `;
+            
+            // Show copy button again
+            document.querySelector('.modal-button.primary').style.display = 'block';
         }
 
         // Close modal when clicking outside
@@ -2047,7 +2348,9 @@
             document.getElementById('manual-step-selection').style.display = 'none';
             
             if (role === 'host') {
-                document.getElementById('manual-host-step1').style.display = 'block';
+                // Skip the intermediate step and create offer immediately
+                document.getElementById('manual-host-step2').style.display = 'block';
+                createManualOfferDirect();
             } else {
                 document.getElementById('manual-join-step1').style.display = 'block';
             }
@@ -2069,20 +2372,40 @@
             document.getElementById('manual-offer-result').style.display = 'none';
         }
 
-        async function createManualOffer() {
+        // Create manual offer directly (no intermediate step)
+        async function createManualOfferDirect() {
             try {
                 const peerConnection = new RTCPeerConnection(rtcConfig);
                 const dataChannel = peerConnection.createDataChannel('chat', {
                     ordered: true
                 });
 
-                setupPeerConnection(peerConnection, dataChannel);
-
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
                 pendingOffer = peerConnection;
                 
+                // Set up ICE candidate gathering for manual offer
+                peerConnection.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        // All ICE candidates gathered, offer is now complete
+                        const offerData = JSON.stringify({
+                            type: 'offer',
+                            sdp: peerConnection.localDescription.sdp,
+                            username: myUsername,
+                            publicKey: window.manualPublicKey
+                        });
+
+                        // Store in manual-specific element
+                        document.getElementById('manualLocalOffer').value = offerData;
+                        document.getElementById('manual-offer-result').style.display = 'block';
+                        
+                        // Show modal immediately
+                        showModal('Share This Offer', offerData);
+
+                        updateStatus('Offer created - share with peer');
+                    }
+                };
+
+                setupPeerConnection(peerConnection, dataChannel);
+
                 // Create a temporary peer entry for tracking
                 const tempPeerId = generatePeerId();
                 peers.set(tempPeerId, {
@@ -2093,24 +2416,81 @@
                     status: 'waiting'
                 });
 
-                const offerData = JSON.stringify({
-                    type: 'offer',
-                    sdp: offer.sdp,
-                    username: myUsername,
-                    publicKey: await exportPublicKey()
-                });
+                // Store public key for ICE callback
+                window.manualPublicKey = await exportPublicKey();
 
-                // Store in manual-specific element
-                document.getElementById('manualLocalOffer').value = offerData;
-                document.getElementById('manual-offer-result').style.display = 'block';
-                
-                // Show modal immediately
-                showModal('Share This Offer', offerData);
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
 
-                updateStatus('Offer created - share with peer');
+                updateStatus('Generating offer...');
             } catch (error) {
                 console.error('Failed to create offer:', error);
                 updateStatus('Failed to create offer');
+                // On error, go back to selection
+                resetManualFlow();
+            }
+        }
+
+        async function createManualOffer() {
+            const createButton = event.target;
+            setButtonLoading(createButton, 'Creating Offer...');
+            
+            try {
+                const peerConnection = new RTCPeerConnection(rtcConfig);
+                const dataChannel = peerConnection.createDataChannel('chat', {
+                    ordered: true
+                });
+
+                pendingOffer = peerConnection;
+                
+                // Set up ICE candidate gathering for manual offer
+                peerConnection.onicecandidate = (event) => {
+                    if (!event.candidate) {
+                        // All ICE candidates gathered, offer is now complete
+                        const offerData = JSON.stringify({
+                            type: 'offer',
+                            sdp: peerConnection.localDescription.sdp,
+                            username: myUsername,
+                            publicKey: window.manualPublicKey
+                        });
+
+                        // Store in manual-specific element
+                        document.getElementById('manualLocalOffer').value = offerData;
+                        document.getElementById('manual-offer-result').style.display = 'block';
+                        
+                        // Clear button loading state
+                        clearButtonLoading(createButton);
+                        
+                        // Show modal immediately
+                        showModal('Share This Offer', offerData);
+
+                        updateStatus('Offer created - share with peer');
+                    }
+                };
+
+                setupPeerConnection(peerConnection, dataChannel);
+
+                // Create a temporary peer entry for tracking
+                const tempPeerId = generatePeerId();
+                peers.set(tempPeerId, {
+                    connection: peerConnection,
+                    channel: dataChannel,
+                    username: 'Pending...',
+                    publicKey: null,
+                    status: 'waiting'
+                });
+
+                // Store public key for ICE callback
+                window.manualPublicKey = await exportPublicKey();
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                updateStatus('Generating offer...');
+            } catch (error) {
+                console.error('Failed to create offer:', error);
+                updateStatus('Failed to create offer');
+                clearButtonLoading(createButton);
             }
         }
 
@@ -2125,18 +2505,30 @@
         }
 
         function handleManualOffer() {
+            const acceptButton = event.target;
+            setButtonLoading(acceptButton, 'Generating Answer...');
+            
             handleRemoteOffer(); // Use existing function
             // After processing, show the generated answer
             setTimeout(() => {
                 // The existing function shows the answer in a modal, but we want it in our flow
                 document.getElementById('manual-join-step1').style.display = 'none';
                 document.getElementById('manual-join-step2').style.display = 'block';
+                clearButtonLoading(acceptButton);
             }, 100);
         }
 
         function handleManualAnswer() {
+            const acceptButton = event.target;
+            setButtonLoading(acceptButton, 'Connecting...');
+            
             handleRemoteAnswer(); // Use existing function
-            resetManualFlow(); // Return to start after successful connection
+            
+            // Clear loading after a short delay
+            setTimeout(() => {
+                clearButtonLoading(acceptButton);
+                resetManualFlow(); // Return to start after successful connection
+            }, 1000);
         }
 
         // Initialize the application
