@@ -18,29 +18,33 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
             margin: 0;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+            box-shadow: none;
             width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
+            max-width: none;
+            margin: 0;
             display: flex;
             flex-direction: column;
-            min-height: calc(100vh - 40px);
+            height: 100vh;
         }
 
         .header {
-            padding: 20px;
+            padding: 15px 20px;
             background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             text-align: center;
             position: relative;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .header h1 {
@@ -56,6 +60,8 @@
         .main-content {
             display: flex;
             flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .sidebar {
@@ -63,28 +69,239 @@
             background: rgba(0, 0, 0, 0.05);
             padding: 25px;
             border-right: 1px solid rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
         }
         
         .sidebar.full-width {
             width: 100%;
             border-right: none;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        /* Drawer styles when chat is active */
+        .sidebar.drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 90vw;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+            transform: translateX(-100%);
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 60px 25px 25px 25px;
+        }
+
+        .sidebar.drawer.open {
+            transform: translateX(0);
+            background: rgba(255, 255, 255, 1); /* More opaque when open */
+        }
+
+        /* Make sure collapsible sections are visible in drawer */
+        .sidebar.drawer .section-content {
+            max-height: none !important;
+            overflow: visible !important;
+            padding-top: 15px;
+        }
+
+        .sidebar.drawer .section-header {
+            pointer-events: auto;
+        }
+
+        .sidebar.drawer .section-toggle {
+            display: none; /* Hide toggle arrows in drawer since everything is expanded */
+        }
+
+        /* Drawer overlay */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .drawer-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Drawer toggle button */
+        .drawer-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 1em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .drawer-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .drawer-toggle.visible {
+            display: flex;
+        }
+        
+        /* Better scrollbar styling */
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.4);
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.6);
+        }
+        
+        /* Sidebar scrollbar styling */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Chat tabs styling */
+        .chat-tabs {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .chat-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .chat-tab {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .chat-tab:not(.active) {
+            background: rgba(255, 255, 255, 0.8) !important;
+            color: #666 !important;
+        }
+        
+        .chat-tab:hover {
+            transform: translateY(-1px);
+        }
+        
+        .chat-tab .unread-indicator {
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        
+        .chat-tab .close-tab {
+            margin-left: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+        }
+        
+        .chat-tab .close-tab:hover {
+            background: rgba(0,0,0,0.4);
         }
 
         .chat-area {
             flex: 1;
             display: none;
             flex-direction: column;
+            position: relative;
         }
         
         .chat-area.connected {
             display: flex;
         }
 
+        /* When chat is active, make it full width */
+        .main-content.chat-active {
+            flex-direction: row;
+        }
+
+        .main-content.chat-active .sidebar {
+            display: none;
+        }
+
+        .main-content.chat-active .chat-area {
+            width: 100%;
+        }
+
         .messages {
             flex: 1;
             padding: 20px;
             background: rgba(255, 255, 255, 0.3);
-            min-height: 300px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            min-height: 0;
         }
 
         .message {
@@ -119,25 +336,27 @@
         }
 
         .input-area {
-            padding: 20px;
+            padding: 25px;
             background: rgba(255, 255, 255, 0.9);
             border-top: 1px solid rgba(0, 0, 0, 0.1);
+            min-height: 120px;
         }
 
         .input-group {
             display: flex;
-            gap: 0.8em;
-            align-items: center;
+            gap: 15px;
+            align-items: stretch;
+            height: 60px;
         }
 
         input, textarea, button {
             border: none;
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 1em;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 1.1em;
             outline: none;
             transition: all 0.3s ease;
-            margin: 4px 0;
+            margin: 0;
         }
 
         input, textarea {
@@ -162,8 +381,60 @@
             cursor: pointer;
             font-weight: 600;
             transition: transform 0.2s ease;
-            margin: 6px 0;
-            min-width: 120px;
+            margin: 0;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Different styling for main connection method buttons */
+        .main-connection-section button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            min-width: auto;
+            height: auto;
+            box-shadow: 0 3px 10px rgba(79, 172, 254, 0.3);
+        }
+        
+        .main-connection-section button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        /* Input area buttons keep original purple styling */
+        .input-area button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 60px;
+        }
+        
+        /* Sub-action buttons (like choose your role, create room) - more subtle styling */
+        .manual-step button,
+        .tab-content button:not(.main-connection-section button):not(.scan-button) {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 2px solid rgba(79, 172, 254, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 10px;
+        }
+        
+        .manual-step button:hover,
+        .tab-content button:not(.main-connection-section button):not(.scan-button):hover {
+            background: rgba(79, 172, 254, 0.1);
+            border-color: rgba(79, 172, 254, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .manual-step button small {
+            display: block;
+            font-size: 0.8em;
+            margin-top: 4px;
+            opacity: 0.7;
         }
 
         button:hover {
@@ -216,6 +487,37 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .peer-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .peer-item .peer-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .peer-item .dm-button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 4px 8px;
+            font-size: 0.7em;
+            cursor: pointer;
+            margin-left: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .peer-item:hover .dm-button {
+            opacity: 1;
         }
 
         .peer-status {
@@ -727,11 +1029,46 @@
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
+                height: 100%;
             }
             
-            .sidebar {
+            .sidebar:not(.drawer) {
                 width: 100%;
-                max-height: 40vh;
+                height: 100%;
+            }
+
+            /* Mobile drawer adjustments */
+            .sidebar.drawer {
+                width: 90vw;
+                max-width: 350px;
+                padding: 60px 20px 20px 20px;
+                height: 100vh;
+            }
+
+            .drawer-toggle {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1.1em;
+            }
+
+            /* Chat area adjustments on mobile */
+            .chat-area.connected {
+                height: 100vh;
+            }
+
+            .messages {
+                padding: 15px;
+                min-height: calc(100vh - 200px);
+            }
+
+            .input-area {
+                padding: 15px;
+                position: sticky;
+                bottom: 0;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
             }
             
             .modal-content {
@@ -739,10 +1076,21 @@
                 width: 95%;
                 padding: 20px;
             }
+
+            /* Hide header on mobile when chat is active to save space */
+            .main-content.chat-active + .header {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Drawer toggle button -->
+    <button class="drawer-toggle" id="drawer-toggle" onclick="toggleDrawer()">☰</button>
+    
+    <!-- Drawer overlay -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
     <div class="container">
         <div class="header">
             <h1>🕸️ Mesh</h1>
@@ -753,63 +1101,75 @@
         <div class="main-content">
             <div class="sidebar full-width">
                 <div class="main-connection-section">
-                    <h3>🤝 Connect to Peers</h3>
-                    
-                    <div class="feature-tabs">
-                        <button class="tab-button active" onclick="switchTab('host')">📱 Host</button>
-                        <button class="tab-button" onclick="switchTab('join')">📷 Join</button>
-                        <button class="tab-button" onclick="switchTab('manual')">⌨️ Manual</button>
-                    </div>
+                    <h3>🔗 Connect to Mesh Network</h3>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 20px; text-align: center;">Connect to other users to join the mesh network</p>
 
-                    <!-- Host Tab -->
-                    <div id="host-tab" class="tab-content active">
-                        <div id="host-initial" style="text-align: center;">
-                            <button onclick="createRoomOffer()" style="margin-bottom: 15px;">🏠 Create Room</button>
-                        </div>
-                        <div id="host-waiting" style="display: none;">
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <div style="color: #333; font-weight: 600; margin-bottom: 15px;">🏠 Room Created!</div>
-                                <div style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Waiting for peers to connect...</div>
-                                <button onclick="showRoomModal()" style="margin-bottom: 10px;">📋 Show Offer Again</button>
+                    <div id="main-connect" style="text-align: center;">
+                        <div id="not-connected" style="display: block;">
+                            <div style="margin-bottom: 30px;">
+                                <button onclick="startManualFlow('join')" style="margin-bottom: 15px; font-size: 1.1em; padding: 15px 25px;">🔗 Connect to Someone</button>
                             </div>
+                            
+                            <div style="background: rgba(13, 110, 253, 0.1); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 10px; padding: 20px;">
+                                <p style="color: #084298; font-size: 0.9em; margin: 0; line-height: 1.4;"><strong>Start Here:</strong> Connect to at least one person to join the mesh network. Once connected, you can create rooms and chat with your network.</p>
+                            </div>
+                        </div>
+                        
+                        <div id="connected" style="display: none;">
+                            <div style="background: rgba(25, 135, 84, 0.1); border: 1px solid rgba(25, 135, 84, 0.3); border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+                                <p style="color: #0f5132; font-size: 1em; margin: 0; font-weight: 600;">✓ Connected to Mesh Network!</p>
+                            </div>
+                            
+                            <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                                <button onclick="createRoomOffer()" style="flex: 1;">🏠 Create Room</button>
+                                <button onclick="startManualFlow('join')" style="flex: 1; background: rgba(255,255,255,0.8); color: #333;">🔗 Connect More</button>
+                            </div>
+                            
+                            <div style="border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px;">
+                                <h5 style="color: #333; margin-bottom: 10px;">Join a Room</h5>
+                                <p style="color: #888; font-size: 0.85em; margin-bottom: 15px;">Enter a room code from someone in your mesh:</p>
+                                <div style="margin-bottom: 15px;">
+                                    <input type="text" id="room-code" placeholder="Enter room code" style="width: 100%; text-align: center; padding: 12px; font-size: 1em;" oninput="handleRoomCodeInput()">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="room-hosting" style="display: none;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="color: #333; font-weight: 600; margin-bottom: 10px; font-size: 1.2em;">🏠 Room Active!</div>
+                                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
+                                    <div style="font-size: 0.9em; margin-bottom: 8px;">Room Code:</div>
+                                    <div style="font-size: 1.8em; font-weight: bold; letter-spacing: 2px;" id="room-code-display"></div>
+                                </div>
+                                <button onclick="copyTextToClipboard(window.currentRoomData?.roomCode || ''); alert('Room code copied!');" style="margin-bottom: 15px;">📋 Copy Room Code</button>
+                                <div style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Share this code with people in your mesh network</div>
+                            </div>
+                            
                             <div id="peer-status">
-                                <div style="color: #888; font-size: 0.85em; text-align: center;">No peers connected yet</div>
+                                <div style="color: #888; font-size: 0.85em; text-align: center;">Connected peers can join this room...</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Join Tab -->
-                    <div id="join-tab" class="tab-content">
-                        <div id="camera-container" class="camera-container" style="display: none;">
-                            <video id="qr-video" autoplay muted playsinline></video>
-                            <div class="scan-overlay"></div>
-                        </div>
-                        <div id="scan-result" style="margin-top: 10px; color: #666; text-align: center;"></div>
-                        <div style="margin-top: 15px;">
-                            <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: center;">Enter room code or scan QR:</div>
-                            <div style="display: flex; gap: 0.8em; align-items: center;">
-                                <input type="text" id="room-code" placeholder="Enter room code..." style="flex: 1; text-align: center;" oninput="handleRoomCodeInput()">
-                                <button id="start-camera" onclick="startQRScanner()" class="scan-button">📷 Scan</button>
-                                <button id="stop-camera" onclick="stopQRScanner()" style="display: none;" class="scan-button active">🛑 Stop</button>
-                            </div>
-                            <div style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;">Scan button opens camera to read room QR codes</div>
-                        </div>
-                    </div>
 
-                    <!-- Manual Tab -->
-                    <div id="manual-tab" class="tab-content">
+                </div>
+                
+                <!-- Manual Flow Steps (Hidden by default) -->
+                <div id="manual-steps" style="display: none; padding: 20px; background: rgba(255, 255, 255, 0.7); border-radius: 15px; margin: 20px 0;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <button onclick="resetManualFlow()" style="background: #f5f5f5; color: #666; font-size: 0.9em;">← Back to Connection Options</button>
+                    </div>
                         <!-- Step Selection -->
                         <div id="manual-step-selection" class="manual-step">
                             <div style="text-align: center; margin-bottom: 20px;">
                                 <h4 style="color: #333; margin-bottom: 15px;">Choose your role:</h4>
                                 <div style="display: flex; gap: 0.8em;">
-                                    <button onclick="startManualFlow('host')" style="flex: 1; padding: 15px; font-size: 0.9em;">
-                                        🏠 Host Connection<br>
-                                        <small style="opacity: 0.8;">Create offer first</small>
+                                    <button onclick="startManualFlow('host')" style="flex: 1; padding: 15px; font-size: 0.9em;" class="sub-action-button">
+                                        🏠 Host
                                     </button>
-                                    <button onclick="startManualFlow('join')" style="flex: 1; padding: 15px; font-size: 0.9em;">
-                                        🔗 Join Connection<br>
-                                        <small style="opacity: 0.8;">Have an offer to accept</small>
+                                    <button onclick="startManualFlow('join')" style="flex: 1; padding: 15px; font-size: 0.9em;" class="sub-action-button">
+                                        🔗 Join
                                     </button>
                                 </div>
                             </div>
@@ -991,16 +1351,24 @@
             </div>
 
             <div class="chat-area" id="chat-area">
+                <!-- Chat Tabs -->
+                <div class="chat-tabs" id="chat-tabs" style="background: rgba(255,255,255,0.9); border-bottom: 1px solid rgba(0,0,0,0.1); padding: 10px; display: flex; gap: 5px; overflow-x: auto;">
+                    <button class="chat-tab active" onclick="switchToChat('group')" data-chat="group" style="padding: 8px 15px; border-radius: 20px; border: none; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; font-size: 0.9em; white-space: nowrap;">
+                        👥 Group Chat
+                    </button>
+                </div>
+                
+                <!-- Messages Container -->
                 <div class="messages" id="messages">
                     <div class="message peer">
                         <div class="message-header">System</div>
-                        <div class="message-content">Welcome to serverless P2P chat! Share your offer with friends to start chatting. All messages are cryptographically signed and relayed through the mesh network.</div>
+                        <div class="message-content">Welcome to serverless P2P chat! Right-click on a peer name to start a direct message. All messages are cryptographically signed and relayed through the mesh network.</div>
                     </div>
                 </div>
 
                 <div class="input-area">
                     <div class="input-group">
-                        <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                        <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)" style="flex: 1; height: 60px;">
                         <button onclick="sendMessage()">📤 Send</button>
                     </div>
                 </div>
@@ -1039,6 +1407,18 @@
         let currentRoomCode = null;
         let isHost = false;
         let connectionTimeouts = new Map();
+        
+        // Chat management
+        let activeChats = new Map(); // Map of chatId -> {type: 'group'|'dm', peerId?: string, messages: [], unreadCount: 0}
+        let currentChatId = 'group';
+        
+        // Initialize group chat
+        activeChats.set('group', {
+            type: 'group',
+            messages: [],
+            unreadCount: 0,
+            name: 'Group Chat'
+        });
 
         // WebRTC configuration
         const rtcConfig = {
@@ -1128,6 +1508,7 @@
                 // Remove from peers map
                 peers.delete(peerId);
                 updatePeerList();
+                updateConnectionStatus();
                 console.log(`Cleaned up failed peer ${peerId}`);
             }
         }
@@ -1136,9 +1517,17 @@
         async function init() {
             try {
                 await generateKeys();
-                updateStatus('Ready - Create or join a room to start chatting');
+                updateStatus('Ready - Connect to the mesh to start chatting');
+                updateConnectionStatus();
                 document.getElementById('username').addEventListener('input', (e) => {
                     myUsername = e.target.value || 'Anonymous';
+                });
+                
+                // Add keyboard shortcut for drawer (Escape to close)
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        closeDrawer();
+                    }
                 });
                 
                 // Check if there's a connection URL in the hash
@@ -1200,62 +1589,55 @@
             setButtonLoading(createButton, 'Creating Room...');
             
             try {
-                const peerConnection = new RTCPeerConnection(rtcConfig);
-                const dataChannel = peerConnection.createDataChannel('chat', {
-                    ordered: true
-                });
-
-                pendingOffer = peerConnection;
-                isHost = true;
+                // Generate room code
                 currentRoomCode = generateRoomCode();
-
-                // Set up ICE candidate gathering - CRITICAL for reliable connections
-                peerConnection.onicecandidate = (event) => {
-                    if (!event.candidate) {
-                        // All ICE candidates gathered, offer is now complete
-                        const connectionData = {
-                            type: 'offer',
-                            sdp: peerConnection.localDescription.sdp,
-                            username: myUsername,
-                            publicKey: pendingPublicKey,
-                            roomCode: currentRoomCode
-                        };
-
-                        // Generate shareable URL
-                        const encodedData = btoa(JSON.stringify(connectionData));
-                        const shareUrl = `${window.location.origin}${window.location.pathname}#connect=${encodedData}`;
-                        
-                        // Store room data globally for modal use
-                        window.currentRoomData = {
-                            connectionData: connectionData,
-                            shareUrl: shareUrl,
-                            roomCode: currentRoomCode
-                        };
-
-                        // Switch to waiting view after modal
-                        document.getElementById('host-initial').style.display = 'none';
-                        document.getElementById('host-waiting').style.display = 'block';
-
-                        // Show room modal immediately
-                        showRoomModal();
-
-                        updateStatus(`Room "${currentRoomCode}" created - Waiting for connections`);
-                    }
+                
+                // Create virtual room (no WebRTC connection needed)
+                const roomData = {
+                    roomCode: currentRoomCode,
+                    created: Date.now(),
+                    host: myUsername
                 };
 
-                setupPeerConnection(peerConnection, dataChannel);
+                // Store room data
+                window.currentRoomData = roomData;
+                
+                // Update room code display
+                document.getElementById('room-code-display').textContent = currentRoomCode;
 
-                // Store public key for use in ICE callback
-                window.pendingPublicKey = await exportPublicKey();
+                // Switch to waiting view and show modal
+                document.getElementById('host-initial').style.display = 'none';
+                document.getElementById('room-hosting').style.display = 'block';
+                
+                // Show room modal
+                showRoomModal();
 
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
-                updateStatus('Generating connection data...');
+                updateStatus(`Room "${currentRoomCode}" created - Share with connected peers`);
+                
+                // Reset button
+                createButton.innerHTML = '🏠 Create Room';
+                createButton.disabled = false;
+                
+                // Create a room chat tab
+                const roomChatId = `room_${currentRoomCode}`;
+                activeChats.set(roomChatId, {
+                    type: 'room',
+                    roomCode: currentRoomCode,
+                    messages: [],
+                    unreadCount: 0,
+                    name: `Room ${currentRoomCode}`
+                });
+                addChatTab(roomChatId, `Room ${currentRoomCode}`);
+                switchToChat(roomChatId);
+                
+                addMessageToChat(roomChatId, `Room "${currentRoomCode}" created! Share the code with people in your mesh network.`, 'System', false);
             } catch (error) {
                 console.error('Failed to create room:', error);
-                updateStatus('Failed to create room');
-                clearButtonLoading(createButton);
+                alert('Error creating room: ' + error.message);
+                
+                // Reset button
+                createButton.innerHTML = '🏠 Create Room';
+                createButton.disabled = false;
             }
         }
 
@@ -1266,41 +1648,35 @@
                 return;
             }
 
-            const { connectionData, shareUrl, roomCode } = window.currentRoomData;
+            const { roomCode } = window.currentRoomData;
 
-            // Create QR code
-            const qrCanvas = document.createElement('canvas');
-            const qr = new QRious({
-                element: qrCanvas,
-                value: JSON.stringify(connectionData),
-                size: 256,
-                foreground: '#333333',
-                background: '#FFFFFF'
-            });
+            // No QR code needed for room codes
 
-            // Create modal content with QR and URL
+            // Create simple modal content with just room code
             const modalContent = `
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <h4 style="color: #333; margin-bottom: 15px;">Room: ${roomCode}</h4>
-                    <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block; margin-bottom: 15px;">
-                        ${qrCanvas.outerHTML}
+                    <h4 style="color: #333; margin-bottom: 15px;">🏠 Room Information</h4>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 0.9em; margin-bottom: 8px;">Room Code:</div>
+                        <div style="font-size: 2em; font-weight: bold; letter-spacing: 3px;">${roomCode}</div>
                     </div>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <div style="font-weight: 600; margin-bottom: 10px; color: #333;">📋 Share this link:</div>
-                    <div style="font-family: monospace; font-size: 0.85em; background: #f5f5f5; padding: 10px; border-radius: 8px; word-break: break-all; border: 2px solid #e0e0e0;">
-                        ${shareUrl}
+                <div style="margin-bottom: 25px;">
+                    <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 10px; padding: 15px;">
+                        <p style="color: #856404; font-size: 0.9em; margin: 0; line-height: 1.4;"><strong>Important:</strong> Only people already connected to your mesh network can join this room. They need to enter this code in their "Join a Room" section.</p>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.8em; margin-top: 15px;">
-                    <button onclick="copyTextToClipboard('${shareUrl.replace(/'/g, "\\'")}'); alert('Link copied to clipboard!');" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">📋 Copy Link</button>
-                    <button onclick="shareRoomUrl()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">📤 Share</button>
+                    <button onclick="copyTextToClipboard('${roomCode}'); alert('Room code copied!');" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em;">📋 Copy Room Code</button>
                 </div>
             `;
 
             // Show modal with custom content
-            showCustomModal('🏠 Your Room is Ready!', modalContent);
+            showCustomModal('🏠 Room Details', modalContent);
         }
+        
 
         // Show custom modal with HTML content
         function showCustomModal(title, htmlContent) {
@@ -1499,6 +1875,7 @@
 
                 updateStatus(`Connected to room "${offerData.roomCode || 'Unknown'}"`);
                 updatePeerList();
+                updateConnectionStatus();
             } catch (error) {
                 console.error('Failed to connect via QR:', error);
                 document.getElementById('scan-result').textContent = 'Connection failed';
@@ -1517,15 +1894,51 @@
         }
 
         // Join by room code
-        function joinByCode(code = null) {
+        async function joinByCode(code = null) {
             const codeInput = document.getElementById('room-code');
             const roomCode = code || codeInput.value.trim().toUpperCase();
             if (!roomCode) return;
             
-            // In a real implementation, you'd look up the room code
-            // For now, show instructions
-            addMessage('System', `To join room "${roomCode}", scan the host's QR code or use the manual connection method.`);
-            codeInput.value = '';
+            try {
+                // Create our answer to send to the host
+                const peerConnection = new RTCPeerConnection(rtcConfig);
+                
+                // Set up data channel handler
+                peerConnection.ondatachannel = (event) => {
+                    const dataChannel = event.channel;
+                    setupPeerConnection(peerConnection, dataChannel);
+                };
+                
+                // Create a placeholder offer to get our local description
+                const tempOffer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(tempOffer);
+                
+                // Wait for ICE candidates
+                peerConnection.onicecandidate = async (event) => {
+                    if (!event.candidate) {
+                        // Create our connection info to share with the host
+                        const joinRequest = {
+                            type: 'join-request',
+                            roomCode: roomCode,
+                            username: myUsername,
+                            publicKey: await exportPublicKey(),
+                            timestamp: Date.now()
+                        };
+                        
+                        // Show instructions for completing the connection
+                        addMessageToChat('group', `Attempting to join room "${roomCode}". Ask the host to create a new offer for you to complete the connection.`, 'System', false);
+                        
+                        // Switch to manual join flow for now
+                        startManualFlow('join');
+                    }
+                };
+                
+                codeInput.value = '';
+                
+            } catch (error) {
+                console.error('Error joining room:', error);
+                alert('Error joining room: ' + error.message);
+            }
         }
 
         // Handle connection URL
@@ -1536,7 +1949,7 @@
                 
                 if (connectionData.type === 'offer') {
                     // Auto-switch to join tab and populate
-                    switchTab('manual');
+                    // Manual flow is now integrated into host/join tabs
                     document.getElementById('remoteOffer').value = JSON.stringify(connectionData);
                     addMessage('System', 'Connection data loaded from URL - click "Accept Offer" to connect');
                     
@@ -1715,6 +2128,7 @@
 
                 document.getElementById('remoteOffer').value = '';
                 updatePeerList();
+                updateConnectionStatus();
             } catch (error) {
                 console.error('Failed to handle offer:', error);
                 updateStatus('Failed to handle offer');
@@ -1763,6 +2177,7 @@
                 document.getElementById('remoteAnswer').value = '';
                 updateStatus('Connection established');
                 updatePeerList();
+                updateConnectionStatus();
             } catch (error) {
                 console.error('Failed to handle answer:', error);
                 updateStatus('Failed to handle answer');
@@ -1820,6 +2235,7 @@
                 }
             }
             updatePeerList();
+            updateConnectionStatus();
         }
 
         // Send message
@@ -1829,13 +2245,27 @@
             if (!message) return;
 
             try {
-                const messageData = await createSignedMessage(message);
+                const chat = activeChats.get(currentChatId);
+                if (!chat) return;
                 
-                // Add to our own chat
-                addMessage(myUsername, message, true);
+                const messageData = await createSignedMessage(message, chat.type === 'dm' ? chat.peerId : null);
                 
-                // Send to all connected peers
-                broadcastMessage(messageData);
+                // Add to current chat
+                addMessageToChat(currentChatId, message, myUsername, true);
+                
+                // Send message
+                if (chat.type === 'group') {
+                    // Send to all connected peers
+                    broadcastMessage(messageData);
+                } else {
+                    // Send to specific peer
+                    const peer = peers.get(chat.peerId);
+                    if (peer && peer.channel && peer.channel.readyState === 'open') {
+                        peer.channel.send(JSON.stringify(messageData));
+                    } else {
+                        alert('Unable to send message - peer not connected');
+                    }
+                }
                 
                 input.value = '';
                 messagesSent++;
@@ -1844,9 +2274,60 @@
                 console.error('Failed to send message:', error);
             }
         }
+        
+        // Add message to specific chat
+        function addMessageToChat(chatId, content, author, isOwn) {
+            const chat = activeChats.get(chatId);
+            if (!chat) return;
+            
+            // Store message in chat history
+            chat.messages.push({
+                content,
+                author,
+                isOwn,
+                timestamp: Date.now()
+            });
+            
+            // If this is the active chat, display it
+            if (currentChatId === chatId) {
+                addMessageToDOM(content, author, isOwn, true);
+            } else {
+                // Increment unread count for inactive chats
+                chat.unreadCount++;
+                updateChatTab(chatId);
+            }
+        }
+        
+        // Add message to DOM
+        function addMessageToDOM(content, author, isOwn, scroll = true) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : 'peer'}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div class="message-header">${author} <span style="opacity: 0.6; font-size: 0.8em;">${timestamp}</span></div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            if (scroll) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+            
+            // Animation
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(20px)';
+            requestAnimationFrame(() => {
+                messageDiv.style.transition = 'all 0.3s ease';
+                messageDiv.style.opacity = '1';
+                messageDiv.style.transform = 'translateY(0)';
+            });
+        }
 
         // Create signed message
-        async function createSignedMessage(content) {
+        async function createSignedMessage(content, targetPeerId = null) {
             const messageId = generateMessageId();
             const timestamp = Date.now();
             
@@ -1855,7 +2336,8 @@
                 content: content,
                 username: myUsername,
                 timestamp: timestamp,
-                publicKey: await exportPublicKey()
+                publicKey: await exportPublicKey(),
+                targetPeerId: targetPeerId // null for group messages, peerId for DMs
             };
 
             // Sign the message
@@ -1948,7 +2430,37 @@
             const myPublicKey = await exportPublicKey();
             if (messageData.publicKey !== myPublicKey) {
                 console.log('Adding message to chat from:', messageData.username);
-                addMessage(messageData.username, messageData.content, false);
+                
+                // Determine which chat this message belongs to
+                let chatId = 'group';
+                if (messageData.targetPeerId) {
+                    // This is a DM - either for us or someone else
+                    const myPeerId = generatePeerId(); // We need to track our own peer ID
+                    if (messageData.targetPeerId === myPeerId) {
+                        // DM for us - find or create chat with sender
+                        const senderPeer = Array.from(peers.entries()).find(([id, peer]) => peer.publicKey === messageData.publicKey);
+                        if (senderPeer) {
+                            chatId = `dm_${senderPeer[0]}`;
+                            // Create chat if it doesn't exist
+                            if (!activeChats.has(chatId)) {
+                                activeChats.set(chatId, {
+                                    type: 'dm',
+                                    peerId: senderPeer[0],
+                                    messages: [],
+                                    unreadCount: 0,
+                                    name: messageData.username
+                                });
+                                addChatTab(chatId, messageData.username);
+                            }
+                        }
+                    } else {
+                        // DM for someone else - don't display, just relay
+                        relayMessage(messageData);
+                        return;
+                    }
+                }
+                
+                addMessageToChat(chatId, messageData.content, messageData.username, false);
                 messagesReceived++;
             } else {
                 console.log('Message from self, not adding to chat');
@@ -2024,6 +2536,20 @@
         }
 
         // Update peer list
+        function updateConnectionStatus() {
+            const isConnected = peers.size > 0;
+            const notConnected = document.getElementById('not-connected');
+            const connected = document.getElementById('connected');
+            
+            if (isConnected) {
+                if (notConnected) notConnected.style.display = 'none';
+                if (connected) connected.style.display = 'block';
+            } else {
+                if (notConnected) notConnected.style.display = 'block';
+                if (connected) connected.style.display = 'none';
+            }
+        }
+
         function updatePeerList() {
             const peerList = document.getElementById('peerList');
             const peerCount = document.getElementById('peerCount');
@@ -2042,8 +2568,9 @@
                     const peerDiv = document.createElement('div');
                     peerDiv.className = 'peer-item';
                     peerDiv.innerHTML = `
-                        <span>${peer.username}</span>
+                        <span class="peer-name" onclick="createDirectMessage('${peerId}')">${peer.username}</span>
                         <span class="peer-status ${peer.status}">${peer.status}</span>
+                        <button class="dm-button" onclick="createDirectMessage('${peerId}')">💬 DM</button>
                     `;
                     peerList.appendChild(peerDiv);
                 }
@@ -2090,6 +2617,7 @@
                 }
             }
             updatePeerList();
+            updateConnectionStatus();
         }
 
         // Export public key
@@ -2103,6 +2631,141 @@
         // Generate unique IDs
         function generatePeerId() {
             return 'peer_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // Chat management functions
+        function switchToChat(chatId) {
+            const previousChat = currentChatId;
+            currentChatId = chatId;
+            
+            // Update tab appearances
+            document.querySelectorAll('.chat-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.chat === chatId) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Clear unread count for current chat
+            if (activeChats.has(chatId)) {
+                activeChats.get(chatId).unreadCount = 0;
+                updateChatTab(chatId);
+            }
+            
+            // Load messages for this chat
+            loadChatMessages(chatId);
+            
+            // Update input placeholder
+            const input = document.getElementById('messageInput');
+            const chat = activeChats.get(chatId);
+            if (chat) {
+                if (chat.type === 'group') {
+                    input.placeholder = 'Type your message...';
+                } else {
+                    input.placeholder = `Message ${chat.name}...`;
+                }
+            }
+        }
+        
+        function createDirectMessage(peerId) {
+            const peer = peers.get(peerId);
+            if (!peer) return;
+            
+            const chatId = `dm_${peerId}`;
+            
+            // Create chat if it doesn't exist
+            if (!activeChats.has(chatId)) {
+                activeChats.set(chatId, {
+                    type: 'dm',
+                    peerId: peerId,
+                    messages: [],
+                    unreadCount: 0,
+                    name: peer.username || 'Unknown'
+                });
+                
+                // Add chat tab
+                addChatTab(chatId, peer.username || 'Unknown');
+            }
+            
+            // Switch to this chat
+            switchToChat(chatId);
+        }
+        
+        function addChatTab(chatId, name) {
+            const tabsContainer = document.getElementById('chat-tabs');
+            const chat = activeChats.get(chatId);
+            
+            const tab = document.createElement('button');
+            tab.className = 'chat-tab';
+            tab.dataset.chat = chatId;
+            tab.onclick = () => switchToChat(chatId);
+            
+            const icon = chat.type === 'group' ? '👥' : '💬';
+            tab.innerHTML = `
+                <span>${icon} ${name}</span>
+                <span class="unread-indicator" style="display: none;">0</span>
+                ${chat.type !== 'group' ? '<span class="close-tab" onclick="closeChatTab(event, \''+chatId+'\');">×</span>' : ''}
+            `;
+            
+            tabsContainer.appendChild(tab);
+        }
+        
+        function closeChatTab(event, chatId) {
+            event.stopPropagation();
+            
+            // Remove chat
+            activeChats.delete(chatId);
+            
+            // Remove tab
+            const tab = document.querySelector(`[data-chat="${chatId}"]`);
+            if (tab) tab.remove();
+            
+            // Switch to group chat if this was active
+            if (currentChatId === chatId) {
+                switchToChat('group');
+            }
+        }
+        
+        function updateChatTab(chatId) {
+            const tab = document.querySelector(`[data-chat="${chatId}"]`);
+            const chat = activeChats.get(chatId);
+            if (!tab || !chat) return;
+            
+            const indicator = tab.querySelector('.unread-indicator');
+            if (chat.unreadCount > 0) {
+                indicator.textContent = chat.unreadCount;
+                indicator.style.display = 'flex';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+        
+        function loadChatMessages(chatId) {
+            const messagesContainer = document.getElementById('messages');
+            const chat = activeChats.get(chatId);
+            if (!chat) return;
+            
+            // Clear current messages
+            messagesContainer.innerHTML = '';
+            
+            // Add welcome message for group chat
+            if (chatId === 'group' && chat.messages.length === 0) {
+                const welcomeMsg = document.createElement('div');
+                welcomeMsg.className = 'message peer';
+                welcomeMsg.innerHTML = `
+                    <div class="message-header">System</div>
+                    <div class="message-content">Welcome to serverless P2P chat! Click on a peer name to start a direct message. All messages are cryptographically signed and relayed through the mesh network.</div>
+                `;
+                messagesContainer.appendChild(welcomeMsg);
+            }
+            
+            // Load chat messages
+            chat.messages.forEach(msg => {
+                addMessageToDOM(msg.content, msg.author, msg.isOwn, false);
+            });
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function generateMessageId() {
@@ -2203,12 +2866,79 @@
         function showChatArea() {
             const chatArea = document.getElementById('chat-area');
             const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const drawerToggle = document.getElementById('drawer-toggle');
             
             if (chatArea) {
                 chatArea.classList.add('connected');
             }
             if (sidebar) {
                 sidebar.classList.remove('full-width');
+                sidebar.classList.add('drawer');
+                
+                // Expand all collapsible sections in drawer mode
+                const sectionContents = sidebar.querySelectorAll('.section-content');
+                const sectionToggles = sidebar.querySelectorAll('.section-toggle');
+                
+                sectionContents.forEach(content => {
+                    content.classList.add('expanded');
+                });
+                
+                sectionToggles.forEach(toggle => {
+                    toggle.classList.add('expanded');
+                });
+            }
+            if (mainContent) {
+                mainContent.classList.add('chat-active');
+            }
+            if (drawerToggle) {
+                drawerToggle.classList.add('visible');
+            }
+        }
+
+        // Toggle drawer open/close
+        function toggleDrawer() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
+            
+            if (sidebar && overlay) {
+                const isOpen = sidebar.classList.contains('open');
+                
+                if (isOpen) {
+                    closeDrawer();
+                } else {
+                    openDrawer();
+                }
+            }
+        }
+
+        // Open drawer
+        function openDrawer() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
+            
+            console.log('Opening drawer:', sidebar, overlay);
+            console.log('Sidebar classes:', sidebar?.className);
+            console.log('Sidebar content:', sidebar?.innerHTML.substring(0, 200));
+            
+            if (sidebar && overlay) {
+                sidebar.classList.add('open');
+                overlay.classList.add('visible');
+                document.body.style.overflow = 'hidden'; // Prevent background scroll
+                
+                console.log('Drawer opened, sidebar classes now:', sidebar.className);
+            }
+        }
+
+        // Close drawer
+        function closeDrawer() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('visible');
+                document.body.style.overflow = ''; // Restore scroll
             }
         }
 
@@ -2344,8 +3074,8 @@
 
         // Manual connection flow functions
         function startManualFlow(role) {
-            // Hide selection step
-            document.getElementById('manual-step-selection').style.display = 'none';
+            // Show manual steps section
+            document.getElementById('manual-steps').style.display = 'block';
             
             if (role === 'host') {
                 // Skip the intermediate step and create offer immediately
@@ -2357,12 +3087,13 @@
         }
 
         function resetManualFlow() {
+            // Hide manual steps section
+            document.getElementById('manual-steps').style.display = 'none';
+            
             // Hide all steps
             document.querySelectorAll('.manual-step').forEach(step => {
                 step.style.display = 'none';
             });
-            // Show selection
-            document.getElementById('manual-step-selection').style.display = 'block';
             
             // Clear any data
             document.getElementById('manualLocalOffer').value = '';
