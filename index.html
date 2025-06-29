@@ -498,6 +498,12 @@
             ]
         };
 
+        // Generate new keys
+        async function generateNewKeys() {
+            await generateKeys();
+            addMessage('System', 'New identity keys generated');
+        }
+
         // Initialize the application
         async function init() {
             try {
