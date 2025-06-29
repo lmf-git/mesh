@@ -521,7 +521,7 @@
 
         .modal-buttons {
             display: flex;
-            gap: 10px;
+            gap: 0.8em;
             justify-content: flex-end;
         }
 
@@ -554,8 +554,8 @@
         .privacy-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 0.8em;
+            margin-top: 0.8em;
         }
 
         .privacy-card {
@@ -605,7 +605,7 @@
         .comparison-table {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr 0.8fr;
-            gap: 8px;
+            gap: 0.8em;
             text-align: center;
             font-size: 0.85em;
         }
@@ -731,7 +731,7 @@
                         <div id="room-url" class="url-section" style="display: none;">
                             <div style="font-weight: 600; margin-bottom: 10px;">📋 Share this link:</div>
                             <div id="share-url" class="share-url"></div>
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 0.8em;">
                                 <button onclick="copyShareUrl()" style="flex: 1;">📋 Copy Link</button>
                                 <button onclick="shareUrl()" style="flex: 1;">📤 Share</button>
                             </div>
@@ -750,7 +750,7 @@
                         <div id="scan-result" style="margin-top: 10px; color: #666; text-align: center;"></div>
                         <div style="margin-top: 15px;">
                             <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: center;">Enter room code or scan QR:</div>
-                            <div style="display: flex; gap: 10px; align-items: center;">
+                            <div style="display: flex; gap: 0.8em; align-items: center;">
                                 <input type="text" id="room-code" placeholder="Enter room code..." style="flex: 1; text-align: center;" oninput="handleRoomCodeInput()">
                                 <button id="start-camera" onclick="startQRScanner()" class="scan-button">📷 Scan</button>
                                 <button id="stop-camera" onclick="stopQRScanner()" style="display: none;" class="scan-button active">🛑 Stop</button>
@@ -765,7 +765,7 @@
                         <div id="manual-step-selection" class="manual-step">
                             <div style="text-align: center; margin-bottom: 20px;">
                                 <h4 style="color: #333; margin-bottom: 15px;">Choose your role:</h4>
-                                <div style="display: flex; gap: 10px;">
+                                <div style="display: flex; gap: 0.8em;">
                                     <button onclick="startManualFlow('host')" style="flex: 1; padding: 15px; font-size: 0.9em;">
                                         🏠 Host Connection<br>
                                         <small style="opacity: 0.8;">Create offer first</small>
@@ -787,7 +787,7 @@
                             <button onclick="createManualOffer()" style="width: 100%; margin-bottom: 15px;">📤 Create Offer</button>
                             <div id="manual-offer-result" style="display: none;">
                                 <textarea id="manualLocalOffer" style="display: none;"></textarea>
-                                <div style="display: flex; gap: 10px;">
+                                <div style="display: flex; gap: 0.8em;">
                                     <button onclick="showOfferModal()" style="flex: 1;">📋 Show Offer Again</button>
                                     <button onclick="proceedToAnswerStep()" style="flex: 1;">➡️ Next: Wait for Answer</button>
                                 </div>
