@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serverless P2P Group Chat</title>
+    <title>Mesh - Connect Without Boundaries</title>
+    <!-- QR Code Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,9 +18,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 20px;
+            margin: 0;
         }
 
         .container {
@@ -25,12 +27,12 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            width: 95%;
+            width: 100%;
             max-width: 1200px;
-            height: 90vh;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            min-height: calc(100vh - 40px);
         }
 
         .header {
@@ -54,28 +56,35 @@
         .main-content {
             display: flex;
             flex: 1;
-            overflow: hidden;
         }
 
         .sidebar {
             width: 350px;
             background: rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            overflow-y: auto;
+            padding: 25px;
             border-right: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar.full-width {
+            width: 100%;
+            border-right: none;
         }
 
         .chat-area {
             flex: 1;
-            display: flex;
+            display: none;
             flex-direction: column;
+        }
+        
+        .chat-area.connected {
+            display: flex;
         }
 
         .messages {
             flex: 1;
-            overflow-y: auto;
             padding: 20px;
             background: rgba(255, 255, 255, 0.3);
+            min-height: 300px;
         }
 
         .message {
@@ -117,7 +126,8 @@
 
         .input-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            align-items: center;
         }
 
         input, textarea, button {
@@ -127,11 +137,18 @@
             font-size: 1em;
             outline: none;
             transition: all 0.3s ease;
+            margin: 4px 0;
         }
 
         input, textarea {
             background: rgba(255, 255, 255, 0.8);
             border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        textarea {
+            resize: none;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         input:focus, textarea:focus {
@@ -145,6 +162,8 @@
             cursor: pointer;
             font-weight: 600;
             transition: transform 0.2s ease;
+            margin: 6px 0;
+            min-width: 120px;
         }
 
         button:hover {
@@ -157,7 +176,8 @@
         }
 
         .connection-section {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            padding: 0 5px;
         }
 
         .connection-section h3 {
@@ -200,9 +220,19 @@
 
         .identity-section {
             background: rgba(255, 255, 255, 0.6);
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .identity-section input {
+            width: 100%;
+            margin: 8px 0;
+        }
+        
+        .identity-section button {
+            width: 100%;
+            margin-top: 12px;
         }
 
         .key-display {
@@ -229,8 +259,12 @@
         }
 
         .camera-section {
-            margin: 15px 0;
+            margin: 20px 0;
             text-align: center;
+        }
+        
+        .camera-section button {
+            margin: 8px 4px;
         }
 
         .camera-container {
@@ -283,9 +317,9 @@
 
         .url-section {
             background: rgba(102, 126, 234, 0.1);
-            padding: 15px;
+            padding: 18px;
             border-radius: 12px;
-            margin: 15px 0;
+            margin: 18px 0;
         }
 
         .share-url {
@@ -330,6 +364,7 @@
 
         .tab-content {
             display: none;
+            padding: 8px 0;
         }
 
         .tab-content.active {
@@ -353,6 +388,269 @@
             }
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            color: #333;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            resize: none;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        .modal-textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+
+        .modal-button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Privacy Section Styles */
+        .privacy-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        .privacy-header {
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .privacy-header:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .privacy-title {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .privacy-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+            color: #667eea;
+        }
+
+        .privacy-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .privacy-content {
+            padding: 0 25px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .privacy-content.expanded {
+            padding: 0 25px 25px 25px;
+            max-height: 1000px;
+        }
+
+        .privacy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .privacy-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .privacy-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .privacy-card h4 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .privacy-card p {
+            color: #666;
+            margin: 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .privacy-comparison {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .privacy-comparison h4 {
+            color: #333;
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .comparison-header {
+            font-weight: 600;
+            color: #333;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .comparison-item {
+            padding: 8px;
+            font-size: 0.85em;
+            border-radius: 6px;
+        }
+
+        .comparison-mesh {
+            background: rgba(76, 175, 80, 0.2);
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .comparison-traditional {
+            background: rgba(244, 67, 54, 0.2);
+            color: #c62828;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -362,18 +660,25 @@
                 width: 100%;
                 max-height: 40vh;
             }
+            
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔗 Serverless P2P Group Chat</h1>
+            <h1>🕸️ Mesh</h1>
+            <div style="font-size: 0.95em; margin-top: 5px; opacity: 0.95;">Connect Without Boundaries - Where Privacy Meets Freedom</div>
             <div class="status" id="status">Initializing...</div>
         </div>
         
         <div class="main-content">
-            <div class="sidebar">
+            <div class="sidebar full-width">
                 <div class="identity-section">
                     <h3>🔑 Your Identity</h3>
                     <div>
@@ -381,7 +686,11 @@
                         <input type="text" id="username" placeholder="Enter your name" value="Anonymous">
                     </div>
                     <div class="key-display" id="publicKey">Generating keys...</div>
-                    <button onclick="generateNewKeys()">🔄 New Keys</button>
+                    <div style="display: flex; gap: 5px; margin-top: 12px;">
+                        <button onclick="generateNewKeys()" style="flex: 1;">🔄 New Keys</button>
+                        <button onclick="exportPrivateKey()" style="flex: 1;">📤 Export</button>
+                        <button onclick="importPrivateKey()" style="flex: 1;">📥 Import</button>
+                    </div>
                 </div>
 
                 <div class="connection-section">
@@ -430,17 +739,17 @@
 
                     <!-- Manual Tab -->
                     <div id="manual-tab" class="tab-content">
-                        <div>
-                            <textarea id="remoteOffer" placeholder="Paste peer's offer here..." rows="3"></textarea>
-                            <button onclick="handleRemoteOffer()">📩 Accept Offer</button>
+                        <div style="margin-bottom: 20px;">
+                            <textarea id="remoteOffer" placeholder="Paste peer's offer here..." rows="3" style="margin-bottom: 10px;"></textarea>
+                            <button onclick="handleRemoteOffer()" style="width: 100%;">📩 Accept Offer</button>
                         </div>
-                        <div style="margin-top: 15px;">
-                            <button onclick="createOffer()">📤 Create Offer</button>
+                        <div style="margin-bottom: 20px;">
+                            <button onclick="createOffer()" style="width: 100%; margin-bottom: 10px;">📤 Create Offer</button>
                             <textarea id="localOffer" placeholder="Share this offer with peers..." rows="3" readonly></textarea>
                         </div>
-                        <div style="margin-top: 15px;">
-                            <textarea id="remoteAnswer" placeholder="Paste answer here..." rows="2"></textarea>
-                            <button onclick="handleRemoteAnswer()">✅ Accept Answer</button>
+                        <div>
+                            <textarea id="remoteAnswer" placeholder="Paste answer here..." rows="2" style="margin-bottom: 10px;"></textarea>
+                            <button onclick="handleRemoteAnswer()" style="width: 100%;">✅ Accept Answer</button>
                         </div>
                     </div>
                 </div>
@@ -457,7 +766,7 @@
                 </div>
             </div>
 
-            <div class="chat-area">
+            <div class="chat-area" id="chat-area">
                 <div class="messages" id="messages">
                     <div class="message peer">
                         <div class="message-header">System</div>
@@ -471,6 +780,23 @@
                         <button onclick="sendMessage()">📤 Send</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">Title</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="modal-textarea" class="modal-textarea" readonly></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" onclick="closeModal()">Close</button>
+                <button class="modal-button primary" onclick="copyModalContent()">📋 Copy</button>
             </div>
         </div>
     </div>
@@ -694,20 +1020,21 @@
                     status: 'connecting'
                 });
 
-                // For QR connections, we'll simulate sending the answer back
-                // In a real implementation, this would go through the same relay
-                setTimeout(async () => {
-                    // Simulate the answer being received by the host
-                    if (pendingOffer) {
-                        const answerData = {
-                            type: 'answer',
-                            sdp: answer.sdp,
-                            username: myUsername,
-                            publicKey: await exportPublicKey()
-                        };
-                        // This is simplified - in reality you'd need a relay mechanism
-                    }
-                }, 1000);
+                // Send answer back through URL parameters or display for manual sharing
+                const answerData = {
+                    type: 'answer',
+                    sdp: answer.sdp,
+                    username: myUsername,
+                    publicKey: await exportPublicKey()
+                };
+                
+                // Display answer for user to share back to host
+                document.getElementById('scan-result').innerHTML = `
+                    <div style="margin: 10px 0; color: #333;">
+                        <strong>Connection initiated!</strong><br>
+                        <button onclick="showModal('Share Answer with Host', '${JSON.stringify(answerData).replace(/'/g, "\\'")}')">📋 View Answer to Share</button>
+                    </div>
+                `;
 
                 updateStatus(`Connected to room "${offerData.roomCode || 'Unknown'}"`);
                 updatePeerList();
@@ -815,6 +1142,16 @@
                 await peerConnection.setLocalDescription(offer);
 
                 pendingOffer = peerConnection;
+                
+                // Create a temporary peer entry for tracking
+                const tempPeerId = generatePeerId();
+                peers.set(tempPeerId, {
+                    connection: peerConnection,
+                    channel: dataChannel,
+                    username: 'Pending...',
+                    publicKey: null,
+                    status: 'waiting'
+                });
 
                 document.getElementById('localOffer').value = JSON.stringify({
                     type: 'offer',
@@ -869,8 +1206,8 @@
                     publicKey: await exportPublicKey()
                 };
 
-                // Auto-fill answer in a new prompt or display
-                prompt('Send this answer to the peer:', JSON.stringify(answerData));
+                // Show answer in modal
+                showModal('Send this Answer to the Peer', JSON.stringify(answerData));
 
                 document.getElementById('remoteOffer').value = '';
                 updateStatus('Answer generated - send to peer');
@@ -893,15 +1230,29 @@
                     sdp: answerData.sdp
                 });
 
-                // Store peer info
-                const peerId = generatePeerId();
-                peers.set(peerId, {
-                    connection: pendingOffer,
-                    channel: pendingOffer.createDataChannel ? null : pendingOffer.getRemoteStreams()[0],
-                    username: answerData.username || 'Unknown',
-                    publicKey: answerData.publicKey,
-                    status: 'connecting'
-                });
+                // Find and update the existing peer connection
+                let peerFound = false;
+                for (let [peerId, peer] of peers) {
+                    if (peer.connection === pendingOffer) {
+                        peer.username = answerData.username || 'Unknown';
+                        peer.publicKey = answerData.publicKey;
+                        peer.status = 'connecting';
+                        peerFound = true;
+                        break;
+                    }
+                }
+                
+                // If no existing peer found, create new one
+                if (!peerFound) {
+                    const peerId = generatePeerId();
+                    peers.set(peerId, {
+                        connection: pendingOffer,
+                        channel: null,
+                        username: answerData.username || 'Unknown',
+                        publicKey: answerData.publicKey,
+                        status: 'connecting'
+                    });
+                }
 
                 pendingOffer = null;
                 document.getElementById('remoteAnswer').value = '';
@@ -934,6 +1285,7 @@
             dataChannel.onopen = () => {
                 console.log('Data channel opened');
                 updateStatus('Connected to peer');
+                showChatArea();
             };
 
             dataChannel.onmessage = async (event) => {
@@ -951,9 +1303,11 @@
 
             // Store the channel reference
             for (let [peerId, peer] of peers) {
-                if (peer.channel === null) {
+                if (peer.channel === null && peer.connection.signalingState !== 'closed') {
                     peer.channel = dataChannel;
                     peer.status = 'connected';
+                    updateStatus(`Connected to ${peer.username}`);
+                    addMessage('System', `Connected to ${peer.username}`);
                     break;
                 }
             }
@@ -1205,6 +1559,205 @@
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
+            }
+        }
+
+        // Modal functions
+        function showModal(title, content, isEditable = false) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalTextarea = document.getElementById('modal-textarea');
+            
+            modalTitle.textContent = title;
+            modalTextarea.value = content;
+            modalTextarea.readOnly = !isEditable;
+            modal.style.display = 'block';
+            
+            // Focus textarea for easy selection
+            setTimeout(() => {
+                modalTextarea.focus();
+                if (!isEditable) {
+                    modalTextarea.select();
+                }
+            }, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            // Restore original modal buttons in case they were changed
+            const modalButtons = document.querySelector('.modal-buttons');
+            modalButtons.innerHTML = `
+                <button class="modal-button secondary" onclick="closeModal()">Close</button>
+                <button class="modal-button primary" onclick="copyModalContent()">📋 Copy</button>
+            `;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        async function copyModalContent() {
+            const textarea = document.getElementById('modal-textarea');
+            try {
+                await navigator.clipboard.writeText(textarea.value);
+                addMessage('System', 'Content copied to clipboard');
+                closeModal();
+            } catch (error) {
+                console.error('Failed to copy:', error);
+                // Fallback for older browsers
+                textarea.select();
+                document.execCommand('copy');
+                addMessage('System', 'Content copied to clipboard');
+                closeModal();
+            }
+        }
+
+        // Copy text to clipboard helper (legacy)
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                addMessage('System', 'Content copied to clipboard');
+            } catch (error) {
+                console.error('Failed to copy:', error);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                addMessage('System', 'Content copied to clipboard');
+            }
+        }
+
+        // Show chat area when connected
+        function showChatArea() {
+            const chatArea = document.getElementById('chat-area');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (chatArea) {
+                chatArea.classList.add('connected');
+            }
+            if (sidebar) {
+                sidebar.classList.remove('full-width');
+            }
+        }
+
+        // Hide chat area when disconnected
+        function hideChatArea() {
+            const chatArea = document.getElementById('chat-area');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (chatArea) {
+                chatArea.classList.remove('connected');
+            }
+            if (sidebar) {
+                sidebar.classList.add('full-width');
+            }
+        }
+
+        // Export private key
+        async function exportPrivateKey() {
+            if (!myKeys) {
+                addMessage('System', 'No keys generated yet');
+                return;
+            }
+            
+            try {
+                const privateKeyBuffer = await window.crypto.subtle.exportKey('pkcs8', myKeys.privateKey);
+                const privateKeyHex = Array.from(new Uint8Array(privateKeyBuffer))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                
+                showModal('Export Private Key', privateKeyHex);
+            } catch (error) {
+                console.error('Failed to export private key:', error);
+                addMessage('System', 'Failed to export private key');
+            }
+        }
+
+        // Import private key
+        async function importPrivateKey() {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalTextarea = document.getElementById('modal-textarea');
+            const modalButtons = document.querySelector('.modal-buttons');
+            
+            modalTitle.textContent = 'Import Private Key';
+            modalTextarea.value = '';
+            modalTextarea.readOnly = false;
+            modalTextarea.placeholder = 'Paste your private key hex string here...';
+            modal.style.display = 'block';
+            
+            // Replace buttons with import-specific ones
+            modalButtons.innerHTML = `
+                <button class="modal-button secondary" onclick="closeModal()">Cancel</button>
+                <button class="modal-button primary" onclick="processPrivateKeyImport()">📥 Import</button>
+            `;
+            
+            setTimeout(() => modalTextarea.focus(), 100);
+        }
+
+        // Process private key import
+        async function processPrivateKeyImport() {
+            const modalTextarea = document.getElementById('modal-textarea');
+            const privateKeyHex = modalTextarea.value.trim();
+            
+            if (!privateKeyHex) {
+                addMessage('System', 'Please enter a private key');
+                return;
+            }
+            
+            try {
+                // Convert hex to buffer
+                const privateKeyBuffer = new Uint8Array(
+                    privateKeyHex.match(/.{2}/g).map(byte => parseInt(byte, 16))
+                );
+                
+                // Import private key
+                const privateKey = await window.crypto.subtle.importKey(
+                    'pkcs8',
+                    privateKeyBuffer,
+                    { name: 'ECDSA', namedCurve: 'P-256' },
+                    true,
+                    ['sign']
+                );
+                
+                // Derive public key
+                const publicKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    privateKeyBuffer.slice(-65), // Last 65 bytes for uncompressed public key
+                    { name: 'ECDSA', namedCurve: 'P-256' },
+                    true,
+                    ['verify']
+                );
+                
+                myKeys = { privateKey, publicKey };
+                
+                // Update display
+                const publicKeyBuffer = await window.crypto.subtle.exportKey('raw', myKeys.publicKey);
+                const publicKeyHex = Array.from(new Uint8Array(publicKeyBuffer))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                
+                document.getElementById('publicKey').textContent = `Public Key: ${publicKeyHex.substring(0, 32)}...`;
+                addMessage('System', 'Private key imported successfully');
+                closeModal();
+                
+                // Restore original modal buttons
+                const modalButtons = document.querySelector('.modal-buttons');
+                modalButtons.innerHTML = `
+                    <button class="modal-button secondary" onclick="closeModal()">Close</button>
+                    <button class="modal-button primary" onclick="copyModalContent()">📋 Copy</button>
+                `;
+                
+            } catch (error) {
+                console.error('Failed to import private key:', error);
+                addMessage('System', 'Failed to import private key. Please check the format.');
             }
         }
 
