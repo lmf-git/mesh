@@ -144,9 +144,9 @@
 
         /* Drawer toggle button */
         .drawer-toggle {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
             z-index: 1001;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -173,7 +173,13 @@
         }
 
         .drawer-toggle.visible {
-            display: flex;
+            display: flex !important;
+        }
+        
+        /* Ensure drawer toggle is always visible when connected */
+        .chat-area.connected ~ .drawer-toggle,
+        .main-content.chat-active ~ .drawer-toggle {
+            display: flex !important;
         }
         
         /* Better scrollbar styling */
@@ -1070,27 +1076,97 @@
             box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
         }
         
-        /* Desktop: Show sidebar and drawer properly */
+        /* Desktop: Keep sidebar in normal flow */
         @media (min-width: 769px) {
-            .main-content.chat-active .sidebar.drawer {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                width: 400px;
-                transform: translateX(-100%);
-                z-index: 1000;
-                background: rgba(255, 255, 255, 0.98);
-                backdrop-filter: blur(10px);
-                padding: 80px 25px 25px 25px;
+            .main-content {
+                height: calc(100vh - 90px) !important;
+                overflow: hidden !important;
             }
             
-            .main-content.chat-active .sidebar.drawer.open {
-                transform: translateX(0);
+            .main-content.chat-active {
+                display: flex !important;
+                flex-direction: row !important;
             }
             
-            .drawer-overlay {
-                z-index: 999;
+            .main-content.chat-active .sidebar {
+                display: block !important;
+                position: static !important;
+                width: 350px !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                transform: none !important;
+                background: rgba(0, 0, 0, 0.05) !important;
+                backdrop-filter: none !important;
+                padding: 25px !important;
+                border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+                overflow-y: auto !important;
+                flex-shrink: 0 !important;
+            }
+            
+            .main-content.chat-active .chat-area {
+                flex: 1 !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            
+            .main-content.chat-active .chat-area .messages {
+                flex: 1 !important;
+                overflow-y: auto !important;
+                height: 0 !important; /* Flex hack for proper scrolling */
+            }
+            
+            /* Hide drawer toggle on desktop when connected */
+            .main-content.chat-active .drawer-toggle {
+                display: none !important;
+            }
+            
+            /* Ensure sections are expanded on desktop */
+            .main-content.chat-active .sidebar .section-content {
+                max-height: none !important;
+                overflow: visible !important;
+                padding-top: 15px !important;
+            }
+            
+            .main-content.chat-active .sidebar .section-toggle {
+                display: none !important;
+            }
+            
+            /* Container for collapsible sections on desktop */
+            .main-content.chat-active .sidebar {
+                padding: 0 !important;
+            }
+            
+            .main-content.chat-active .sidebar .main-connection-section {
+                padding: 25px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .main-content.chat-active .sidebar .collapsible-sections-container {
+                padding: 25px !important;
+                padding-top: 0 !important;
+            }
+            
+            /* Match spacing of main connection section on desktop */
+            .main-content.chat-active .sidebar .collapsible-section {
+                margin-bottom: 30px !important;
+            }
+            
+            .main-content.chat-active .sidebar .section-header h3 {
+                margin-bottom: 15px !important;
+            }
+            
+            /* Fix sidebar scrolling on desktop */
+            .sidebar {
+                height: calc(100vh - 90px) !important;
+                max-height: calc(100vh - 90px) !important;
+            }
+            
+            .sidebar.full-width {
+                height: calc(100vh - 90px) !important;
+                max-height: calc(100vh - 90px) !important;
             }
         }
 
@@ -1105,12 +1181,43 @@
                 height: 100%;
             }
 
-            /* Mobile drawer adjustments */
-            .sidebar.drawer {
-                width: 90vw;
-                max-width: 350px;
-                padding: 60px 20px 20px 20px;
-                height: 100vh;
+            /* Mobile drawer styles */
+            .main-content.chat-active .sidebar.drawer {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                height: 100vh !important;
+                width: 90vw !important;
+                max-width: 350px !important;
+                background: rgba(255, 255, 255, 0.98) !important;
+                backdrop-filter: blur(10px) !important;
+                box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15) !important;
+                border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+                transform: translateX(-100%) !important;
+                z-index: 1000 !important;
+                padding: 60px 20px 20px 20px !important;
+                overflow-y: auto !important;
+            }
+            
+            .main-content.chat-active .sidebar.drawer.open {
+                transform: translateX(0) !important;
+            }
+            
+            /* Show drawer toggle on mobile */
+            .main-content.chat-active .drawer-toggle {
+                display: flex !important;
+            }
+            
+            /* Mobile chat area adjustments */
+            .main-content.chat-active .chat-area {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            /* Mobile drawer overlay */
+            .drawer-overlay.visible {
+                display: block !important;
+                z-index: 999 !important;
             }
 
             .drawer-toggle {
@@ -1174,12 +1281,28 @@
 
                     <div id="main-connect" style="text-align: center;">
                         <div id="not-connected" style="display: block;">
-                            <div style="margin-bottom: 30px;">
-                                <button onclick="startManualFlow('join')" style="margin-bottom: 15px; font-size: 1.1em; padding: 15px 25px;">🔗 Connect to Someone</button>
+                            <div id="initial-connect" style="display: block;">
+                                <div style="margin-bottom: 30px;">
+                                    <button onclick="showRoleSelection()" style="margin-bottom: 15px; font-size: 1.1em; padding: 15px 25px;">🔗 Connect to Someone</button>
+                                </div>
+                                
+                                <div style="background: rgba(13, 110, 253, 0.1); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 10px; padding: 20px;">
+                                    <p style="color: #084298; font-size: 0.9em; margin: 0; line-height: 1.4;"><strong>Start Here:</strong> Connect to at least one person to join the mesh network. Once connected, you can create rooms and chat with your network.</p>
+                                </div>
                             </div>
                             
-                            <div style="background: rgba(13, 110, 253, 0.1); border: 1px solid rgba(13, 110, 253, 0.3); border-radius: 10px; padding: 20px;">
-                                <p style="color: #084298; font-size: 0.9em; margin: 0; line-height: 1.4;"><strong>Start Here:</strong> Connect to at least one person to join the mesh network. Once connected, you can create rooms and chat with your network.</p>
+                            <!-- Role Selection (initially hidden) -->
+                            <div id="role-selection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
+                                <h4 style="color: #333; margin-bottom: 15px;">Choose your role:</h4>
+                                <div style="display: flex; gap: 0.8em; margin-bottom: 15px;">
+                                    <button onclick="startManualFlow('host')" style="flex: 1; padding: 15px; font-size: 0.9em;" class="sub-action-button">
+                                        🏠 Host
+                                    </button>
+                                    <button onclick="startManualFlow('join')" style="flex: 1; padding: 15px; font-size: 0.9em;" class="sub-action-button">
+                                        🔗 Join
+                                    </button>
+                                </div>
+                                <button onclick="hideRoleSelection()" style="background: #f5f5f5; color: #666; font-size: 0.9em;">← Back</button>
                             </div>
                         </div>
                         
@@ -1222,14 +1345,10 @@
                     <!-- Join Tab -->
 
                 </div>
-                
-                <!-- Manual Flow Steps (Hidden by default) -->
-                <div id="manual-steps" style="display: none; padding: 20px; background: rgba(255, 255, 255, 0.7); border-radius: 15px; margin: 20px 0;">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <button onclick="resetManualFlow()" style="background: #f5f5f5; color: #666; font-size: 0.9em;">← Back to Connection Options</button>
                     </div>
                         <!-- Step Selection -->
-                        <div id="manual-step-selection" class="manual-step">
+                        <div id="manual-step-selection" class="manual-step" style="display: none;">
                             <div style="text-align: center; margin-bottom: 20px;">
                                 <h4 style="color: #333; margin-bottom: 15px;">Choose your role:</h4>
                                 <div style="display: flex; gap: 0.8em;">
@@ -1285,59 +1404,60 @@
                     </div>
                 </div>
 
-                <div class="collapsible-section">
-                    <div class="section-header" onclick="toggleSection('peers')">
-                        <h3>👥 Connected Peers (<span id="peerCount">0</span>)</h3>
-                        <span class="section-toggle" id="peers-toggle">▼</span>
-                    </div>
-                    <div class="section-content" id="peers-content">
-                        <div class="connection-section">
-                            <div class="peer-list" id="peerList"></div>
+                <div class="collapsible-sections-container">
+                    <div class="collapsible-section">
+                        <div class="section-header" onclick="toggleSection('peers')">
+                            <h3>👥 Connected Peers (<span id="peerCount">0</span>)</h3>
+                            <span class="section-toggle" id="peers-toggle">▼</span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="collapsible-section">
-                    <div class="section-header" onclick="toggleSection('identity')">
-                        <h3>🔑 Your Identity</h3>
-                        <span class="section-toggle" id="identity-toggle">▼</span>
-                    </div>
-                    <div class="section-content" id="identity-content">
-                        <div class="identity-section">
-                            <div>
-                                <label>Username:</label>
-                                <input type="text" id="username" placeholder="Enter your name" value="Anonymous">
-                            </div>
-                            <div class="key-display" id="publicKey">Generating keys...</div>
-                            <div style="display: flex; gap: 5px; margin-top: 12px;">
-                                <button onclick="generateNewKeys()" style="flex: 1;">🔄 New Keys</button>
-                                <button onclick="exportPrivateKey()" style="flex: 1;">📤 Export</button>
-                                <button onclick="importPrivateKey()" style="flex: 1;">📥 Import</button>
+                        <div class="section-content" id="peers-content">
+                            <div class="connection-section">
+                                <div class="peer-list" id="peerList"></div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="collapsible-section">
-                    <div class="section-header" onclick="toggleSection('stats')">
-                        <h3>📊 Statistics</h3>
-                        <span class="section-toggle" id="stats-toggle">▼</span>
-                    </div>
-                    <div class="section-content" id="stats-content">
-                        <div class="stats" id="stats">
-                            Messages sent: 0<br>
-                            Messages received: 0<br>
-                            Messages relayed: 0
+                    <div class="collapsible-section">
+                        <div class="section-header" onclick="toggleSection('identity')">
+                            <h3>🔑 Your Identity</h3>
+                            <span class="section-toggle" id="identity-toggle">▼</span>
+                        </div>
+                        <div class="section-content" id="identity-content">
+                            <div class="identity-section">
+                                <div>
+                                    <label>Username:</label>
+                                    <input type="text" id="username" placeholder="Enter your name" value="Anonymous">
+                                </div>
+                                <div class="key-display" id="publicKey">Generating keys...</div>
+                                <div style="display: flex; gap: 5px; margin-top: 12px;">
+                                    <button onclick="generateNewKeys()" style="flex: 1;">🔄 New Keys</button>
+                                    <button onclick="exportPrivateKey()" style="flex: 1;">📤 Export</button>
+                                    <button onclick="importPrivateKey()" style="flex: 1;">📥 Import</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="collapsible-section">
-                    <div class="section-header" onclick="toggleSection('privacy')">
-                        <h3>🔒 Why Mesh is Most Private & Secure</h3>
-                        <span class="section-toggle" id="privacy-toggle">▼</span>
+                    <div class="collapsible-section">
+                        <div class="section-header" onclick="toggleSection('stats')">
+                            <h3>📊 Statistics</h3>
+                            <span class="section-toggle" id="stats-toggle">▼</span>
+                        </div>
+                        <div class="section-content" id="stats-content">
+                            <div class="stats" id="stats">
+                                Messages sent: 0<br>
+                                Messages received: 0<br>
+                                Messages relayed: 0
+                            </div>
+                        </div>
                     </div>
-                    <div class="section-content" id="privacy-content">
+
+                    <div class="collapsible-section">
+                        <div class="section-header" onclick="toggleSection('privacy')">
+                            <h3>🔒 Why Mesh is Most Private & Secure</h3>
+                            <span class="section-toggle" id="privacy-toggle">▼</span>
+                        </div>
+                        <div class="section-content" id="privacy-content">
                         <div class="privacy-grid">
                             <div class="privacy-card">
                                 <h4>🚫 Zero Servers</h4>
@@ -1416,9 +1536,10 @@
                         </div>
                     </div>
                 </div>
+                </div>
                 
-                <!-- Chat Tabs Section (only shown when connected) -->
-                <div class="section chat-tabs-section" id="chat-tabs-section" style="display: none;">
+                <!-- Chat Tabs Section (only shown when connected) - moved to bottom -->
+                <div class="section chat-tabs-section" id="chat-tabs-section" style="display: none; margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px;">
                     <div class="section-header">
                         <span>💬 Active Chats</span>
                     </div>
@@ -1434,7 +1555,6 @@
             </div>
 
             <div class="chat-area" id="chat-area">
-                
                 <!-- Messages Container -->
                 <div class="messages" id="messages">
                     <div class="message peer">
@@ -3083,9 +3203,13 @@
             }
             if (sidebar) {
                 sidebar.classList.remove('full-width');
-                sidebar.classList.add('drawer');
                 
-                // Expand all collapsible sections in drawer mode
+                // Only add drawer class on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('drawer');
+                }
+                
+                // Expand all collapsible sections when connected
                 const sectionContents = sidebar.querySelectorAll('.section-content');
                 const sectionToggles = sidebar.querySelectorAll('.section-toggle');
                 
@@ -3100,11 +3224,17 @@
             if (mainContent) {
                 mainContent.classList.add('chat-active');
             }
-            if (drawerToggle) {
+            if (drawerToggle && window.innerWidth <= 768) {
                 drawerToggle.classList.add('visible');
+                drawerToggle.style.display = 'flex';
+                console.log('Drawer toggle should be visible now:', drawerToggle);
             }
-            if (chatTabsSection) {
-                chatTabsSection.style.display = 'block';
+            // Only show chat tabs when we actually have connected peers and chats
+            if (chatTabsSection && peers.size > 0) {
+                const connectedPeers = Array.from(peers.values()).filter(peer => peer.status === 'connected');
+                if (connectedPeers.length > 0) {
+                    chatTabsSection.style.display = 'block';
+                }
             }
             
             // Create DM tab with first connected peer and switch to it
@@ -3134,6 +3264,7 @@
         // Toggle drawer open/close
         function toggleDrawer() {
             const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
             
             if (sidebar) {
                 const isOpen = sidebar.classList.contains('open');
@@ -3149,12 +3280,17 @@
         // Open drawer
         function openDrawer() {
             const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
             
             console.log('Opening drawer:', sidebar);
             console.log('Sidebar classes:', sidebar?.className);
             
-            if (sidebar) {
+            if (sidebar && window.innerWidth <= 768) {
                 sidebar.classList.add('open');
+                if (overlay) {
+                    overlay.classList.add('visible');
+                }
+                document.body.style.overflow = 'hidden';
                 
                 console.log('Drawer opened, sidebar classes now:', sidebar.className);
             }
@@ -3163,9 +3299,14 @@
         // Close drawer
         function closeDrawer() {
             const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('drawer-overlay');
             
             if (sidebar) {
                 sidebar.classList.remove('open');
+                if (overlay) {
+                    overlay.classList.remove('visible');
+                }
+                document.body.style.overflow = '';
             }
         }
 
@@ -3173,12 +3314,22 @@
         function hideChatArea() {
             const chatArea = document.getElementById('chat-area');
             const sidebar = document.querySelector('.sidebar');
+            const chatTabsSection = document.getElementById('chat-tabs-section');
+            const drawerToggle = document.getElementById('drawer-toggle');
             
             if (chatArea) {
                 chatArea.classList.remove('connected');
             }
             if (sidebar) {
                 sidebar.classList.add('full-width');
+                sidebar.classList.remove('drawer');
+            }
+            if (chatTabsSection) {
+                chatTabsSection.style.display = 'none';
+            }
+            if (drawerToggle) {
+                drawerToggle.classList.remove('visible');
+                drawerToggle.style.display = 'none';
             }
         }
 
@@ -3301,8 +3452,8 @@
 
         // Manual connection flow functions
         function startManualFlow(role) {
-            // Show manual steps section
-            document.getElementById('manual-steps').style.display = 'block';
+            // Hide role selection
+            document.getElementById('role-selection').style.display = 'none';
             
             if (role === 'host') {
                 // Skip the intermediate step and create offer immediately
@@ -3314,8 +3465,11 @@
         }
 
         function resetManualFlow() {
-            // Hide manual steps section
-            document.getElementById('manual-steps').style.display = 'none';
+            // Hide all manual steps and show role selection
+            document.getElementById('manual-host-step2').style.display = 'none';
+            document.getElementById('manual-join-step1').style.display = 'none';
+            document.getElementById('manual-join-step2').style.display = 'none';
+            document.getElementById('role-selection').style.display = 'block';
             
             // Hide all steps
             document.querySelectorAll('.manual-step').forEach(step => {
@@ -3822,6 +3976,24 @@
                     addMessageToChat(currentChatId, `${fromPeer} ended the call`, 'System', false);
                     break;
             }
+        }
+
+        // New simplified connection UI functions
+        function showRoleSelection() {
+            document.getElementById('initial-connect').style.display = 'none';
+            document.getElementById('role-selection').style.display = 'block';
+        }
+        
+        function hideRoleSelection() {
+            document.getElementById('initial-connect').style.display = 'block';
+            document.getElementById('role-selection').style.display = 'none';
+        }
+        
+        function resetToStart() {
+            hideRoleSelection();
+            // Hide any connection steps that might be showing
+            const connectionSteps = document.getElementById('connection-steps');
+            if (connectionSteps) connectionSteps.style.display = 'none';
         }
 
         // Initialize the application

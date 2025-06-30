@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesh - Connect Without Boundaries</title>
+    
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- QR Code Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0;
+            box-shadow: none;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 15px 20px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .status {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar.full-width {
+            width: 100%;
+            border-right: none;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .main-connection-section {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .main-connection-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 1.1em;
+            outline: none;
+            transition: all 0.3s ease;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-connection-section button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            min-width: auto;
+            height: auto;
+            box-shadow: 0 3px 10px rgba(79, 172, 254, 0.3);
+        }
+
+        .main-connection-section button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 0.8em;
+            margin-bottom: 15px;
+        }
+
+        .role-buttons button {
+            flex: 1;
+            padding: 15px;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: 2px solid rgba(79, 172, 254, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-buttons button:hover {
+            background: rgba(79, 172, 254, 0.1);
+            border-color: rgba(79, 172, 254, 0.5);
+        }
+
+        .back-button {
+            background: #f5f5f5 !important;
+            color: #666 !important;
+            font-size: 0.9em !important;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+            resize: none;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 1em;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .collapsible-sections-container {
+            padding: 25px;
+            padding-top: 0;
+        }
+
+        .collapsible-section {
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .section-content {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+            border-radius: 12px;
+        }
+
+        .peer-list {
+            margin-top: 15px;
+        }
+
+        .peer-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .peer-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .peer-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .peer-status.connected {
+            background: #4ade80;
+            color: white;
+        }
+
+        .peer-status.connecting {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .peer-status.failed {
+            background: #ef4444;
+            color: white;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-area.connected {
+            display: flex;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            min-height: 0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.own {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.peer {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .message-header {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            font-size: 1em;
+            line-height: 1.4;
+        }
+
+        .input-area {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            min-height: 120px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: stretch;
+            height: 60px;
+        }
+
+        .input-group input {
+            flex: 1;
+            height: 60px;
+            margin: 0;
+        }
+
+        .input-group button {
+            height: 60px;
+        }
+
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .call-controls button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .video-streams {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .video-container {
+            position: relative;
+        }
+
+        .video-container video {
+            width: 300px;
+            height: 200px;
+            background: #000;
+            border-radius: 10px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar.full-width {
+                width: 100%;
+            }
+            
+            .collapsible-sections-container {
+                padding: 15px;
+                padding-top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // WebRTC Configuration
+        const rtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        };
+
+        // Crypto utilities
+        const generateKeyPair = async () => {
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: "ECDSA",
+                    namedCurve: "P-256"
+                },
+                true,
+                ["sign", "verify"]
+            );
+            return keyPair;
+        };
+
+        const exportPublicKey = async (publicKey) => {
+            const exported = await window.crypto.subtle.exportKey("spki", publicKey);
+            const exportedAsString = String.fromCharCode.apply(null, new Uint8Array(exported));
+            return btoa(exportedAsString);
+        };
+
+        // Main App Component
+        const App = () => {
+            const [connectionState, setConnectionState] = useState('disconnected'); // disconnected, connecting, connected
+            const [peers, setPeers] = useState(new Map());
+            const [messages, setMessages] = useState([]);
+            const [username, setUsername] = useState('Anonymous');
+            const [keyPair, setKeyPair] = useState(null);
+            const [publicKey, setPublicKey] = useState('');
+            const [currentView, setCurrentView] = useState('connect'); // connect, role-selection, host, join
+            const [offerData, setOfferData] = useState('');
+            const [answerData, setAnswerData] = useState('');
+            const [remoteOfferData, setRemoteOfferData] = useState('');
+            const [isInCall, setIsInCall] = useState(false);
+            const [localStream, setLocalStream] = useState(null);
+            const [remoteStream, setRemoteStream] = useState(null);
+            const [sectionsExpanded, setSectionsExpanded] = useState({
+                peers: true,
+                identity: false,
+                stats: false,
+                privacy: false
+            });
+
+            const localVideoRef = useRef(null);
+            const remoteVideoRef = useRef(null);
+            const peerConnections = useRef(new Map());
+            const messageInputRef = useRef(null);
+
+            // Initialize crypto keys on mount
+            useEffect(() => {
+                const initKeys = async () => {
+                    try {
+                        const keys = await generateKeyPair();
+                        setKeyPair(keys);
+                        const pubKey = await exportPublicKey(keys.publicKey);
+                        setPublicKey(pubKey);
+                    } catch (error) {
+                        console.error('Failed to generate keys:', error);
+                    }
+                };
+                initKeys();
+            }, []);
+
+            // Add system message on mount
+            useEffect(() => {
+                setMessages([{
+                    id: Date.now(),
+                    sender: 'System',
+                    content: 'Welcome to serverless P2P chat! Connect to someone to start messaging.',
+                    timestamp: new Date(),
+                    isOwn: false
+                }]);
+            }, []);
+
+            const addMessage = useCallback((sender, content, isOwn = false) => {
+                setMessages(prev => [...prev, {
+                    id: Date.now() + Math.random(),
+                    sender,
+                    content,
+                    timestamp: new Date(),
+                    isOwn
+                }]);
+            }, []);
+
+            const createPeerConnection = useCallback(async (peerId) => {
+                const pc = new RTCPeerConnection(rtcConfig);
+                
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        // Send ICE candidate to peer (would be implemented with signaling)
+                        console.log('ICE candidate:', event.candidate);
+                    }
+                };
+
+                pc.ondatachannel = (event) => {
+                    const channel = event.channel;
+                    channel.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data.type === 'message') {
+                                addMessage(data.sender, data.content, false);
+                            }
+                        } catch (error) {
+                            console.error('Failed to parse message:', error);
+                        }
+                    };
+                };
+
+                pc.ontrack = (event) => {
+                    setRemoteStream(event.streams[0]);
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = event.streams[0];
+                    }
+                };
+
+                pc.onconnectionstatechange = () => {
+                    console.log('Connection state:', pc.connectionState);
+                    if (pc.connectionState === 'connected') {
+                        setConnectionState('connected');
+                        addMessage('System', 'Connected to peer!');
+                    } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                        setConnectionState('disconnected');
+                        addMessage('System', 'Disconnected from peer');
+                    }
+                };
+
+                peerConnections.current.set(peerId, pc);
+                return pc;
+            }, [addMessage]);
+
+            const createOffer = async () => {
+                try {
+                    const peerId = 'host-' + Date.now();
+                    const pc = await createPeerConnection(peerId);
+                    
+                    // Create data channel
+                    const dataChannel = pc.createDataChannel('messages');
+                    
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    
+                    const offerString = JSON.stringify({
+                        type: 'offer',
+                        sdp: offer.sdp,
+                        peerId: peerId,
+                        username: username,
+                        publicKey: publicKey
+                    });
+                    
+                    setOfferData(offerString);
+                    setCurrentView('host');
+                    setConnectionState('connecting');
+                } catch (error) {
+                    console.error('Failed to create offer:', error);
+                    addMessage('System', 'Failed to create offer: ' + error.message);
+                }
+            };
+
+            const handleOffer = async () => {
+                try {
+                    const offerObj = JSON.parse(remoteOfferData);
+                    const peerId = offerObj.peerId || 'remote-' + Date.now();
+                    const pc = await createPeerConnection(peerId);
+                    
+                    await pc.setRemoteDescription(new RTCSessionDescription({
+                        type: 'offer',
+                        sdp: offerObj.sdp
+                    }));
+                    
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    
+                    const answerString = JSON.stringify({
+                        type: 'answer',
+                        sdp: answer.sdp,
+                        peerId: 'joiner-' + Date.now(),
+                        username: username,
+                        publicKey: publicKey
+                    });
+                    
+                    setAnswerData(answerString);
+                    setCurrentView('join-step2');
+                    setConnectionState('connecting');
+                } catch (error) {
+                    console.error('Failed to handle offer:', error);
+                    addMessage('System', 'Failed to process offer: ' + error.message);
+                }
+            };
+
+            const handleAnswer = async () => {
+                try {
+                    const answerObj = JSON.parse(answerData);
+                    const pc = peerConnections.current.values().next().value;
+                    
+                    if (pc) {
+                        await pc.setRemoteDescription(new RTCSessionDescription({
+                            type: 'answer',
+                            sdp: answerObj.sdp
+                        }));
+                        addMessage('System', 'Answer processed, establishing connection...');
+                    }
+                } catch (error) {
+                    console.error('Failed to handle answer:', error);
+                    addMessage('System', 'Failed to process answer: ' + error.message);
+                }
+            };
+
+            const sendMessage = () => {
+                const input = messageInputRef.current;
+                if (!input || !input.value.trim()) return;
+                
+                const message = input.value.trim();
+                const dataChannels = [];
+                
+                // Get all data channels from peer connections
+                peerConnections.current.forEach(pc => {
+                    if (pc.connectionState === 'connected') {
+                        const senders = pc.getSenders();
+                        // This is simplified - in real implementation you'd track data channels
+                    }
+                });
+                
+                // Add message to local display
+                addMessage(username, message, true);
+                input.value = '';
+            };
+
+            const startCall = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: true 
+                    });
+                    
+                    setLocalStream(stream);
+                    setIsInCall(true);
+                    
+                    if (localVideoRef.current) {
+                        localVideoRef.current.srcObject = stream;
+                    }
+                    
+                    // Add tracks to all peer connections
+                    peerConnections.current.forEach(pc => {
+                        stream.getTracks().forEach(track => {
+                            pc.addTrack(track, stream);
+                        });
+                    });
+                    
+                    addMessage('System', 'Call started');
+                } catch (error) {
+                    console.error('Failed to start call:', error);
+                    addMessage('System', 'Failed to start call: ' + error.message);
+                }
+            };
+
+            const endCall = () => {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    setLocalStream(null);
+                }
+                setRemoteStream(null);
+                setIsInCall(false);
+                addMessage('System', 'Call ended');
+            };
+
+            const toggleSection = (section) => {
+                setSectionsExpanded(prev => ({
+                    ...prev,
+                    [section]: !prev[section]
+                }));
+            };
+
+            const copyToClipboard = (text) => {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            };
+
+            const resetFlow = () => {
+                setCurrentView('connect');
+                setOfferData('');
+                setAnswerData('');
+                setRemoteOfferData('');
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🕸️ Mesh</h1>
+                        <div style={{fontSize: '0.95em', marginTop: '5px', opacity: '0.95'}}>
+                            Connect Without Boundaries - Where Privacy Meets Freedom
+                        </div>
+                        <div className="status">
+                            {connectionState === 'connected' ? '✓ Connected' : 
+                             connectionState === 'connecting' ? '🔄 Connecting...' : 
+                             '⚪ Not Connected'}
+                        </div>
+                    </div>
+                    
+                    <div className="main-content">
+                        <div className={connectionState === 'connected' ? 'sidebar' : 'sidebar full-width'}>
+                            <div className="main-connection-section">
+                                <h3>🔗 Connect to Mesh Network</h3>
+                                <p style={{color: '#666', fontSize: '0.9em', marginBottom: '20px', textAlign: 'center'}}>
+                                    Connect to other users to join the mesh network
+                                </p>
+
+                                {currentView === 'connect' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <div style={{marginBottom: '30px'}}>
+                                            <button onClick={() => setCurrentView('role-selection')} 
+                                                    style={{marginBottom: '15px', fontSize: '1.1em', padding: '15px 25px'}}>
+                                                🔗 Connect to Someone
+                                            </button>
+                                        </div>
+                                        
+                                        <div style={{background: 'rgba(13, 110, 253, 0.1)', border: '1px solid rgba(13, 110, 253, 0.3)', 
+                                                    borderRadius: '10px', padding: '20px'}}>
+                                            <p style={{color: '#084298', fontSize: '0.9em', margin: '0', lineHeight: '1.4'}}>
+                                                <strong>Start Here:</strong> Connect to at least one person to join the mesh network. 
+                                                Once connected, you can create rooms and chat with your network.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {currentView === 'role-selection' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <h4 style={{color: '#333', marginBottom: '15px'}}>Choose your role:</h4>
+                                        <div className="role-buttons">
+                                            <button onClick={createOffer}>🏠 Host</button>
+                                            <button onClick={() => setCurrentView('join')}>🔗 Join</button>
+                                        </div>
+                                        <button className="back-button" onClick={resetFlow}>← Back</button>
+                                    </div>
+                                )}
+
+                                {currentView === 'host' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <h4 style={{color: '#333', marginBottom: '10px'}}>🏠 Offer Created!</h4>
+                                        <p style={{color: '#666', fontSize: '0.9em', marginBottom: '15px'}}>
+                                            Share your offer and paste the answer you receive back
+                                        </p>
+                                        <button onClick={() => copyToClipboard(offerData)} style={{marginBottom: '15px'}}>
+                                            📋 Copy Offer
+                                        </button>
+                                        <textarea 
+                                            rows="3" 
+                                            placeholder="Paste the answer here..."
+                                            value={answerData}
+                                            onChange={(e) => setAnswerData(e.target.value)}
+                                        />
+                                        <button onClick={handleAnswer} style={{width: '100%', marginBottom: '15px'}}>
+                                            ✅ Accept Answer
+                                        </button>
+                                        <button className="back-button" onClick={resetFlow} style={{width: '100%'}}>
+                                            ↩️ Start Over
+                                        </button>
+                                    </div>
+                                )}
+
+                                {currentView === 'join' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <h4 style={{color: '#333', marginBottom: '10px'}}>🔗 Step 1: Accept Offer</h4>
+                                        <p style={{color: '#666', fontSize: '0.9em', marginBottom: '15px'}}>
+                                            Paste the offer you received from the host
+                                        </p>
+                                        <textarea 
+                                            rows="3" 
+                                            placeholder="Paste the offer here..."
+                                            value={remoteOfferData}
+                                            onChange={(e) => setRemoteOfferData(e.target.value)}
+                                        />
+                                        <button onClick={handleOffer} style={{width: '100%', marginBottom: '15px'}}>
+                                            📩 Accept Offer
+                                        </button>
+                                        <button className="back-button" onClick={resetFlow} style={{width: '100%'}}>
+                                            ↩️ Start Over
+                                        </button>
+                                    </div>
+                                )}
+
+                                {currentView === 'join-step2' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <h4 style={{color: '#333', marginBottom: '10px'}}>🔗 Step 2: Share Your Answer</h4>
+                                        <p style={{color: '#666', fontSize: '0.9em', marginBottom: '15px'}}>
+                                            Send this answer back to the host to complete the connection
+                                        </p>
+                                        <textarea 
+                                            rows="3" 
+                                            value={answerData}
+                                            readOnly
+                                        />
+                                        <button onClick={() => copyToClipboard(answerData)} style={{width: '100%', marginBottom: '15px'}}>
+                                            📋 Copy Answer
+                                        </button>
+                                        <button className="back-button" onClick={resetFlow} style={{width: '100%'}}>
+                                            ↩️ Start Over
+                                        </button>
+                                    </div>
+                                )}
+
+                                {connectionState === 'connected' && (
+                                    <div style={{textAlign: 'center'}}>
+                                        <div style={{background: 'rgba(25, 135, 84, 0.1)', border: '1px solid rgba(25, 135, 84, 0.3)', 
+                                                    borderRadius: '10px', padding: '20px', marginBottom: '25px'}}>
+                                            <p style={{color: '#0f5132', fontSize: '1em', margin: '0', fontWeight: '600'}}>
+                                                ✓ Connected to Mesh Network!
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {connectionState !== 'connected' && (
+                                <div className="collapsible-sections-container">
+                                    <div className="collapsible-section">
+                                        <div className="section-header" onClick={() => toggleSection('identity')}>
+                                            <h3>🔑 Your Identity</h3>
+                                            <span>{sectionsExpanded.identity ? '▲' : '▼'}</span>
+                                        </div>
+                                        {sectionsExpanded.identity && (
+                                            <div className="section-content">
+                                                <div>
+                                                    <label>Username:</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={username}
+                                                        onChange={(e) => setUsername(e.target.value)}
+                                                        placeholder="Enter your name"
+                                                    />
+                                                </div>
+                                                <div style={{fontFamily: 'monospace', fontSize: '0.8em', background: 'rgba(0, 0, 0, 0.1)', 
+                                                            padding: '8px', borderRadius: '6px', wordBreak: 'break-all', marginTop: '8px'}}>
+                                                    {publicKey || 'Generating keys...'}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={`chat-area ${connectionState === 'connected' ? 'connected' : ''}`}>
+                            <div className="messages">
+                                {messages.map(message => (
+                                    <div key={message.id} className={`message ${message.isOwn ? 'own' : 'peer'}`}>
+                                        <div className="message-header">{message.sender}</div>
+                                        <div className="message-content">{message.content}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {isInCall && (
+                                <div style={{padding: '20px', background: 'rgba(0,0,0,0.1)', borderRadius: '10px', margin: '20px'}}>
+                                    <div className="call-controls">
+                                        <button onClick={endCall} style={{background: '#dc3545'}}>📞 End Call</button>
+                                    </div>
+                                    <div className="video-streams">
+                                        <div className="video-container">
+                                            <video ref={localVideoRef} autoPlay muted />
+                                            <div style={{position: 'absolute', bottom: '10px', left: '10px', color: 'white', 
+                                                        background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '3px', fontSize: '0.8em'}}>
+                                                You
+                                            </div>
+                                        </div>
+                                        <div className="video-container">
+                                            <video ref={remoteVideoRef} autoPlay />
+                                            <div style={{position: 'absolute', bottom: '10px', left: '10px', color: 'white', 
+                                                        background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '3px', fontSize: '0.8em'}}>
+                                                Remote
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="input-area">
+                                <div className="input-group">
+                                    <input 
+                                        ref={messageInputRef}
+                                        type="text" 
+                                        placeholder="Type your message..."
+                                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                    />
+                                    <button onClick={sendMessage}>📤 Send</button>
+                                    <button onClick={startCall} style={{background: '#007bff'}}>📞</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
